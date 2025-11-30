@@ -20,8 +20,6 @@ from typing import Dict, List, Tuple, Optional, Any
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import joblib
 
 from sklearn.model_selection import train_test_split
@@ -36,6 +34,9 @@ import xgboost as xgb
 import optuna
 from optuna.pruners import MedianPruner
 from optuna.samplers import TPESampler
+
+from src.visualization import DataVisualizer
+from config import MODEL_RESULTS_DIR, MODELS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE
 
 
 # Cấu hình logging
@@ -86,7 +87,7 @@ class ModelTrainer:
         self.y_train = y_train.copy()
         self.y_test = y_test.copy()
         
-        self.output_dir = Path(output_dir)
+        self.output_dir = Path(output_dir) if output_dir else MODELS_DIR
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.models = {}
@@ -96,6 +97,14 @@ class ModelTrainer:
         self.best_model_name = None
         self.results = {}
         self.optimization_history = {}
+        self.visualizer = DataVisualizer(
+            output_dir=MODEL_RESULTS_DIR,
+            auto_save=True,
+            auto_show=False,
+            dpi=PLOT_DPI,
+            style=PLOT_STYLE,
+            figure_size=FIGURE_SIZE,
+        )
         
         # Set random seed để reproducibility
         np.random.seed(self.RANDOM_SEED)
@@ -554,7 +563,7 @@ class ModelTrainer:
     
     def save_results(self, filename: str = 'model_results.json') -> None:
         """Lưu kết quả đánh giá ra file JSON."""
-        filepath = self.output_dir.parent / 'results' / filename
+        filepath = MODEL_RESULTS_DIR / filename
         filepath.parent.mkdir(parents=True, exist_ok=True)
         
         # Convert np types sang Python types
@@ -585,30 +594,15 @@ class ModelTrainer:
             logger.warning("❌ Chưa có kết quả để vẽ biểu đồ")
             return
         
-        models = list(self.results.keys())
-        values = [self.results[m][metric] for m in models]
-        
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(models, values, color=['#FF6B6B', '#4ECDC4', '#45B7D1'])
-        
-        # Thêm giá trị trên cột
-        for bar, value in zip(bars, values):
-            height = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
-        
-        plt.xlabel('Model', fontsize=12, fontweight='bold')
-        plt.ylabel(metric, fontsize=12, fontweight='bold')
-        plt.title(f'Model Comparison - {metric}', fontsize=14, fontweight='bold')
-        plt.grid(axis='y', alpha=0.3)
-        
+        metric_values = {model: self.results[model][metric] for model in self.results}
+        if not metric_values:
+            logger.warning("❌ Không có kết quả để vẽ biểu đồ")
+            return
+
+        save_path = None
         if save:
-            plot_file = self.output_dir.parent / 'results' / f'comparison_{metric}.png'
-            plot_file.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-            logger.info(f"✅ Đã lưu biểu đồ: {plot_file}")
-        
-        plt.show()
+            save_path = MODEL_RESULTS_DIR / f'comparison_{metric}.png'
+        self.visualizer.plot_model_comparison(metric_values, metric, save_path=save_path, show=not save)
     
     def plot_predictions(self, model_name: str, save: bool = True) -> None:
         """Vẽ biểu đồ actual vs predicted."""
@@ -627,34 +621,16 @@ class ModelTrainer:
         
         y_pred = model_obj.predict(X_test_pred)
         
-        fig, axes = plt.subplots(1, 2, figsize=(15, 5))
-        
-        # Scatter plot
-        axes[0].scatter(self.y_test, y_pred, alpha=0.6)
-        axes[0].plot([self.y_test.min(), self.y_test.max()], 
-                     [self.y_test.min(), self.y_test.max()], 
-                     'r--', lw=2)
-        axes[0].set_xlabel('Actual', fontweight='bold')
-        axes[0].set_ylabel('Predicted', fontweight='bold')
-        axes[0].set_title(f'{model_name} - Actual vs Predicted', fontweight='bold')
-        axes[0].grid(alpha=0.3)
-        
-        # Residuals
-        residuals = self.y_test - y_pred
-        axes[1].scatter(y_pred, residuals, alpha=0.6)
-        axes[1].axhline(y=0, color='r', linestyle='--', lw=2)
-        axes[1].set_xlabel('Predicted', fontweight='bold')
-        axes[1].set_ylabel('Residuals', fontweight='bold')
-        axes[1].set_title(f'{model_name} - Residuals', fontweight='bold')
-        axes[1].grid(alpha=0.3)
-        
+        save_path = None
         if save:
-            plot_file = self.output_dir.parent / 'results' / f'predictions_{model_name}.png'
-            plot_file.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-            logger.info(f"✅ Đã lưu biểu đồ: {plot_file}")
-        
-        plt.show()
+            save_path = MODEL_RESULTS_DIR / f'predictions_{model_name}.png'
+        self.visualizer.plot_regression_diagnostics(
+            y_true=self.y_test,
+            y_pred=y_pred,
+            model_name=model_name,
+            save_path=save_path,
+            show=not save,
+        )
     
     def plot_all_predictions(self, save: bool = True) -> None:
         """Vẽ biểu đồ predictions cho tất cả các mô hình."""
@@ -854,22 +830,16 @@ class ModelTrainer:
         print(importance_df.to_string(index=False))
         
         # Vẽ biểu đồ
-        plt.figure(figsize=(10, 8))
-        plt.barh(importance_df['feature'], importance_df['importance'], color='steelblue')
-        plt.xlabel('Importance', fontsize=12, fontweight='bold')
-        plt.ylabel('Feature', fontsize=12, fontweight='bold')
-        plt.title(f'Feature Importance - {model_name.upper()}', fontsize=14, fontweight='bold')
-        plt.gca().invert_yaxis()
-        plt.grid(axis='x', alpha=0.3)
-        plt.tight_layout()
-        
+        save_path = None
         if save:
-            plot_file = self.output_dir.parent / 'results' / f'feature_importance_{model_name}.png'
-            plot_file.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-            logger.info(f"✅ Đã lưu biểu đồ: {plot_file}")
-        
-        plt.show()
+            save_path = MODEL_RESULTS_DIR / f'feature_importance_{model_name}.png'
+        self.visualizer.plot_feature_importance(
+            importance_df=importance_df,
+            model_name=model_name,
+            save_path=save_path,
+            top_n=top_n,
+            show=not save,
+        )
     
     def plot_all_feature_importance(self, top_n: int = 15, save: bool = True) -> None:
         """Vẽ feature importance cho tất cả mô hình hỗ trợ (bỏ qua Polynomial)."""
@@ -917,22 +887,12 @@ class ModelTrainer:
             return
         
         # Vẽ biểu đồ so sánh
-        fig, axes = plt.subplots(1, len(importances), figsize=(16, 8))
-        
-        for idx, (model_name, imp_df) in enumerate(importances.items()):
-            axes[idx].barh(imp_df['feature'], imp_df['importance'], color='steelblue')
-            axes[idx].set_xlabel('Importance', fontweight='bold')
-            axes[idx].set_ylabel('Feature', fontweight='bold')
-            axes[idx].set_title(f'{model_name.upper()}', fontweight='bold', fontsize=12)
-            axes[idx].invert_yaxis()
-            axes[idx].grid(axis='x', alpha=0.3)
-        
-        plt.tight_layout()
-        
+        save_path = None
         if save:
-            plot_file = self.output_dir.parent / 'results' / 'feature_importance_comparison.png'
-            plot_file.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-            logger.info(f"✅ Đã lưu biểu đồ so sánh: {plot_file}")
-        
-        plt.show()
+            save_path = MODEL_RESULTS_DIR / 'feature_importance_comparison.png'
+        self.visualizer.plot_feature_importance_comparison(
+            importances=importances,
+            save_path=save_path,
+            top_n=top_n,
+            show=not save,
+        )

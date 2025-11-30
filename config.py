@@ -10,10 +10,12 @@ PROJECT_ROOT = Path(__file__).parent
 DATA_DIR = PROJECT_ROOT / 'data'
 MODELS_DIR = PROJECT_ROOT / 'models'
 RESULTS_DIR = PROJECT_ROOT / 'results'
+EDA_RESULTS_DIR = RESULTS_DIR / 'eda'
+MODEL_RESULTS_DIR = RESULTS_DIR / 'model'
 NOTEBOOKS_DIR = PROJECT_ROOT / 'notebooks'
 
 # Tạo thư mục nếu chưa tồn tại
-for dir_path in [DATA_DIR, MODELS_DIR, RESULTS_DIR, NOTEBOOKS_DIR]:
+for dir_path in [DATA_DIR, MODELS_DIR, RESULTS_DIR, NOTEBOOKS_DIR, EDA_RESULTS_DIR, MODEL_RESULTS_DIR]:
     dir_path.mkdir(parents=True, exist_ok=True)
 
 # ========== DỮ LIỆU ==========

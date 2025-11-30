@@ -71,7 +71,7 @@ def download_data():
         sys.exit(1)
 
 
-def preprocess_data() -> Tuple[pd.DataFrame, Optional[List[str]]]:
+def preprocess_data(generate_viz: bool = True) -> Tuple[pd.DataFrame, Optional[List[str]]]:
     """Tiền xử lý dữ liệu và trả về danh sách feature có tương quan cao với target."""
     logger.info("\n" + "="*70)
     logger.info("📊 BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU")
@@ -88,6 +88,10 @@ def preprocess_data() -> Tuple[pd.DataFrame, Optional[List[str]]]:
     if len(missing_df) > 0:
         print("\n⚠️  Missing Values:")
         print(missing_df.to_string(index=False))
+
+    if generate_viz:
+        logger.info("\n🖼️  Đang tạo các biểu đồ EDA (tự động lưu tại results/eda)...")
+        preprocessor.generate_eda_report(target_col=config.TARGET_COLUMN)
     
     # Xử lý missing values
     preprocessor.handle_missing(
@@ -115,7 +119,7 @@ def preprocess_data() -> Tuple[pd.DataFrame, Optional[List[str]]]:
         method='standard',
         exclude_columns=[config.TARGET_COLUMN]
     )
-    heatmap_path = config.RESULTS_DIR / 'correlation_heatmap.png'
+    heatmap_path = config.EDA_RESULTS_DIR / 'correlation_heatmap.png'
     corr_df = preprocessor.plot_correlation_heatmap(
         target_col=config.TARGET_COLUMN,
         method='spearman',
@@ -310,7 +314,7 @@ def main():
             download_data()
         
         # Bước 1: Tiền xử lý
-        df_processed, poly_feature_subset = preprocess_data()
+        df_processed, poly_feature_subset = preprocess_data(generate_viz=not args.no_viz)
         
         # Bước 2: Training
         trainer = train_models(
