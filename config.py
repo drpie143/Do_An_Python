@@ -54,7 +54,7 @@ MISSING_STRATEGY = {
 
 # Cấu hình tạo feature tốc độ (km/h)
 SPEED_FEATURE = {
-    'enabled': True,
+    'enabled': False,
     'name': 'Speed_kmh',
     'distance_col': 'Trip_Distance_km',
     'duration_col': 'Trip_Duration_Minutes',
@@ -64,24 +64,24 @@ SPEED_FEATURE = {
 
 # Quy tắc ràng buộc dữ liệu (type, miền giá trị, hành động)
 CONSTRAINT_RULES = {
-    # 1. Trip distance: enforce 0-140 km window
+    # 1. Trip distance: enforce 0-200 km window
     "Trip_Distance_km": {
         "min": 0.0,
-        "max": 140.0,
+        "max": 200.0,
         "dtype": "float",
-        "action": "clip",
+        "action": "drop",
     },
     # 2. Passenger count must be an integer between 1-6
     "Passenger_Count": {
         "min": 1,
         "max": 6,
         "dtype": "int",
-        "action": "clip",
+        "action": "drop",
     },
-    # 3. Trip duration constrained to 0-120 minutes
+    # 3. Trip duration constrained to 0-180 minutes
     "Trip_Duration_Minutes": {
         "min": 0.0,
-        "max": 120.0,
+        "max": 180.0,
         "dtype": "float",
         "action": "clip",
     },
@@ -103,16 +103,17 @@ CONSTRAINT_RULES = {
         "dtype": "float",
         "action": "mean",
     },
-    # 7. Target price cannot be negative; drop invalid rows to avoid corrupt training
+    # 7. Target price cannot be negative; clip extreme values instead of drop
     "Trip_Price": {
         "min": 0.0,
+        "max": 350.0,
         "dtype": "float",
-        "action": "drop",
+        "action": "clip",
     },
     # 8. Vận tốc trung bình (km/h)
     "Speed_kmh": {
         "min": 0.0,
-        "max": 160.0,
+        "max": 130.0,
         "dtype": "float",
         "action": "clip",
     },
@@ -126,7 +127,7 @@ DROP_FIRST_ONEHOT = True
 SCALING_METHOD = 'standard'   # 'standard', 'minmax'
 
 # Outlier detection
-OUTLIER_DETECTION = False
+OUTLIER_DETECTION = True
 OUTLIER_METHOD = 'iqr'        # 'iqr', 'zscore', 'isolation_forest'
 OUTLIER_THRESHOLD = 1.5
 

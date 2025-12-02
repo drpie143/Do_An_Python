@@ -23,7 +23,7 @@ from sklearn.preprocessing import (
 )
 
 from src.visualization import DataVisualizer
-from config import EDA_RESULTS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE
+from config import EDA_RESULTS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE, SPEED_FEATURE
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -55,10 +55,14 @@ class DataPreprocessor:
 		
 		self.missing_rules: Dict[str, MissingRule] = {}
 		self.constraint_rules: Dict[str, Dict[str, Any]] = {}
-		self.outlier_rules: Dict[str, str] = {}
+		self.outlier_rules: Dict[str, Union[str, Dict[str, Any]]] = {}
 		self.scaler_rules: Dict[str, str] = {}
 		self.encoder_rules: Dict[str, str] = {}
 		self._onehot_drop_first = True
+		self.impute_values: Dict[str, Any] = {}
+		self.outlier_boundaries: Dict[str, Dict[str, Any]] = {}
+		self.outlier_models: Dict[str, Any] = {}
+		self.processed_columns: List[str] = []
 
 		self.scalers: Dict[str, Any] = {}
 		self.encoders: Dict[str, Any] = {}
@@ -373,6 +377,7 @@ class DataPreprocessor:
 			return self
 
 		self.detect_types()
+		self.impute_values = {}
 		for col in cols_with_nan:
 			rule = self.missing_rules.get(col)
 			strategy = None
@@ -391,17 +396,23 @@ class DataPreprocessor:
 					df = df.dropna(subset=[col])
 					logger.info("%s: Drop %s dòng", col, before - len(df))
 				elif strategy == "mean" and pd.api.types.is_numeric_dtype(df[col]):
-					df[col] = df[col].fillna(df[col].mean())
+					fill_val = df[col].mean()
+					df[col] = df[col].fillna(fill_val)
+					self.impute_values[col] = fill_val
 				elif strategy == "median" and pd.api.types.is_numeric_dtype(df[col]):
-					df[col] = df[col].fillna(df[col].median())
+					fill_val = df[col].median()
+					df[col] = df[col].fillna(fill_val)
+					self.impute_values[col] = fill_val
 				elif strategy == "mode":
 					mode_val = df[col].mode().iloc[0] if not df[col].mode().empty else custom_value
 					df[col] = df[col].fillna(mode_val)
+					self.impute_values[col] = mode_val
 				elif strategy == "constant":
 					fill_val = custom_value
 					if fill_val is None:
 						fill_val = 0 if pd.api.types.is_numeric_dtype(df[col]) else "Unknown"
 					df[col] = df[col].fillna(fill_val)
+					self.impute_values[col] = fill_val
 				elif strategy == "ffill":
 					df[col] = df[col].ffill()
 				elif strategy == "bfill":
@@ -410,6 +421,7 @@ class DataPreprocessor:
 					# fallback
 					default_value = df[col].median() if pd.api.types.is_numeric_dtype(df[col]) else df[col].mode().iloc[0]
 					df[col] = df[col].fillna(default_value)
+					self.impute_values[col] = default_value
 			except Exception as exc:
 				self._log("missing_error", f"{col}: {exc}")
 				logger.error("Lỗi xử lý missing cho %s: %s", col, exc)
@@ -457,7 +469,7 @@ class DataPreprocessor:
 		self.preprocessing_steps.append("unify_values")
 		return self
 
-	def handle_outliers(self, outlier_rules: Optional[Dict[str, str]] = None) -> "DataPreprocessor":
+	def handle_outliers(self, outlier_rules: Optional[Dict[str, Union[str, Dict[str, Any]]]] = None) -> "DataPreprocessor":
 		if self.data is None:
 			return self
 		rules = outlier_rules or self.outlier_rules
@@ -465,10 +477,17 @@ class DataPreprocessor:
 			return self
 
 		df = self.data
-		for col, method in rules.items():
+		for col, rule in rules.items():
 			if col not in df.columns or not pd.api.types.is_numeric_dtype(df[col]):
 				continue
-			method = method.lower()
+			if isinstance(rule, dict):
+				method = str(rule.get("method", "iqr")).lower()
+				threshold = rule.get("threshold")
+				extra_params = rule.get("params") or {}
+			else:
+				method = str(rule).lower()
+				threshold = None
+				extra_params = {}
 			mask_outlier = None
 
 			try:
@@ -476,22 +495,52 @@ class DataPreprocessor:
 					q1 = df[col].quantile(0.25)
 					q3 = df[col].quantile(0.75)
 					iqr = q3 - q1
-					lower = q1 - 1.5 * iqr
-					upper = q3 + 1.5 * iqr
+					multiplier = threshold if threshold is not None else 1.5
+					lower = q1 - multiplier * iqr
+					upper = q3 + multiplier * iqr
 					mask_outlier = (df[col] < lower) | (df[col] > upper)
+					self.outlier_boundaries[col] = {
+						"method": "iqr",
+						"lower": lower,
+						"upper": upper,
+					}
 				elif method == "zscore":
-					z_scores = np.abs((df[col] - df[col].mean()) / df[col].std(ddof=0))
-					mask_outlier = z_scores > 3
-				elif method == "iforest":
-					clf = IsolationForest(random_state=42, contamination="auto")
+					mean_val = df[col].mean()
+					std_val = df[col].std(ddof=0)
+					z_scores = np.abs((df[col] - mean_val) / std_val)
+					z_limit = threshold if threshold is not None else 3.0
+					mask_outlier = z_scores > z_limit
+					self.outlier_boundaries[col] = {
+						"method": "zscore",
+						"mean": mean_val,
+						"std": std_val,
+						"limit": z_limit,
+					}
+				elif method in {"iforest", "isolation_forest"}:
+					contamination = extra_params.get("contamination")
+					if contamination is None and threshold is not None:
+						contamination = threshold
+					clf = IsolationForest(random_state=42, contamination=contamination or "auto")
 					preds = clf.fit_predict(df[[col]].fillna(df[col].mean()))
 					mask_outlier = preds == -1
+					self.outlier_boundaries[col] = {"method": "iforest"}
+					self.outlier_models[col] = clf
 				else:
 					logger.warning("Method %s không hợp lệ cho cột %s", method, col)
 					continue
 
 				if mask_outlier is not None and mask_outlier.any():
-					logger.info("%s: Drop %s outliers (%s)", col, int(mask_outlier.sum()), method)
+					default_threshold = {"iqr": 1.5, "zscore": 3.0}.get(method, "auto")
+					threshold_display = threshold if threshold is not None else default_threshold
+					if method in {"iforest", "isolation_forest"}:
+						threshold_display = contamination or "auto"
+					logger.info(
+						"%s: Drop %s outliers (%s, threshold=%s)",
+						col,
+						int(mask_outlier.sum()),
+						method,
+						threshold_display,
+					)
 					df = df.loc[~mask_outlier]
 			except Exception as exc:
 				self._log("outlier_error", f"{col}: {exc}")
@@ -501,8 +550,13 @@ class DataPreprocessor:
 		self.preprocessing_steps.append("handle_outliers")
 		return self
 
-	def remove_outliers(self, method: str = "iqr", **kwargs) -> "DataPreprocessor":
-		self.outlier_rules = {col: method for col in self.numeric_cols}
+	def remove_outliers(self, method: str = "iqr", threshold: Optional[float] = None, **kwargs) -> "DataPreprocessor":
+		self.outlier_rules = {
+			col: {"method": method, "threshold": threshold, "params": kwargs}
+			for col in self.numeric_cols
+		}
+		self.outlier_boundaries = {}
+		self.outlier_models = {}
 		return self.handle_outliers(outlier_rules=self.outlier_rules)
 
 	# ------------------------------------------------------------------
@@ -552,6 +606,7 @@ class DataPreprocessor:
 		self.data = df
 		logger.info("✅ Scale hoàn tất - tổng cột đã scale: %s", len(self.scalers))
 		self.preprocessing_steps.append("scale")
+		self.processed_columns = df.columns.tolist()
 		return self
 
 	def scale_features(
@@ -567,6 +622,97 @@ class DataPreprocessor:
 		self.scaler_rules = {col: method for col in target_cols}
 		self.default_scaler = None
 		return self.scale()
+
+	def transform_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
+		"""Áp dụng lại các bước đã fit trên dataset mới (ví dụ: test set)."""
+		if self.data is None:
+			raise ValueError("Cần fit DataPreprocessor trên tập train trước khi transform")
+		if not self.processed_columns:
+			self.processed_columns = self.data.columns.tolist()
+
+		transformed = df.copy()
+		for col, fill_val in self.impute_values.items():
+			if col in transformed.columns:
+				transformed[col] = transformed[col].fillna(fill_val)
+			else:
+				transformed[col] = fill_val
+
+		if self.outlier_boundaries:
+			keep_mask = pd.Series(True, index=transformed.index)
+			for col, info in self.outlier_boundaries.items():
+				if col not in transformed.columns:
+					continue
+				method = info.get("method")
+				col_mask = pd.Series(False, index=transformed.index)
+				if method == "iqr":
+					lower = info.get("lower", -np.inf)
+					upper = info.get("upper", np.inf)
+					col_mask = (transformed[col] < lower) | (transformed[col] > upper)
+				elif method == "zscore":
+					std_val = info.get("std", 0)
+					if std_val and std_val != 0:
+						mean_val = info.get("mean", 0)
+						limit = info.get("limit", 3.0)
+						z_scores = np.abs((transformed[col] - mean_val) / std_val)
+						col_mask = z_scores > limit
+				elif method in {"iforest", "isolation_forest"}:
+					model = self.outlier_models.get(col)
+					if model is not None:
+						filled = transformed[[col]].fillna(self.impute_values.get(col, transformed[col].mean()))
+						preds = model.predict(filled)
+						col_mask = preds == -1
+				keep_mask &= ~col_mask
+			if (~keep_mask).any():
+				logger.info("Test set: drop %s dòng do vi phạm outlier rule", int((~keep_mask).sum()))
+				transformed = transformed.loc[keep_mask]
+
+		onehot_frames: List[pd.DataFrame] = []
+		cols_to_drop: List[str] = []
+		for col, encoder in self.encoders.items():
+			if isinstance(encoder, LabelEncoder):
+				if col not in transformed.columns:
+					transformed[col] = encoder.classes_[0]
+				series = transformed[col].astype(str)
+				unknown_mask = ~series.isin(encoder.classes_)
+				if unknown_mask.any():
+					series.loc[unknown_mask] = encoder.classes_[0]
+				transformed[col] = encoder.transform(series)
+			elif isinstance(encoder, OrdinalEncoder):
+				if col not in transformed.columns:
+					transformed[col] = ""
+				transformed[[col]] = encoder.transform(transformed[[col]].astype(str))
+			elif isinstance(encoder, OneHotEncoder):
+				if col not in transformed.columns:
+					transformed[col] = ""
+				matrix = encoder.transform(transformed[[col]].astype(str))
+				cols = encoder.get_feature_names_out([col])
+				temp_df = pd.DataFrame(matrix, columns=cols, index=transformed.index)
+				if self._onehot_drop_first and temp_df.shape[1] > 1:
+					temp_df = temp_df.iloc[:, 1:]
+				temp_df = temp_df.astype(int)
+				onehot_frames.append(temp_df)
+				cols_to_drop.append(col)
+
+		if onehot_frames:
+			transformed = pd.concat([transformed] + onehot_frames, axis=1)
+			transformed.drop(columns=cols_to_drop, inplace=True)
+
+		for col, scaler in self.scalers.items():
+			if col not in transformed.columns:
+				transformed[col] = 0.0
+			try:
+				transformed[[col]] = scaler.transform(transformed[[col]])
+			except Exception as exc:
+				logger.warning("Không thể scale cột %s cho tập transform: %s", col, exc)
+
+		for col in self.processed_columns:
+			if col not in transformed.columns:
+				transformed[col] = 0
+		extra_cols = [col for col in transformed.columns if col not in self.processed_columns]
+		if extra_cols:
+			transformed = transformed.drop(columns=extra_cols)
+
+		return transformed[self.processed_columns].reset_index(drop=True)
 
 	def encode(self, encoder_rules: Optional[Dict[str, str]] = None) -> "DataPreprocessor":
 		if self.data is None:
@@ -630,6 +776,7 @@ class DataPreprocessor:
 		self.data = df
 		logger.info("✅ Encoding hoàn tất - shape mới: %s", df.shape)
 		self.preprocessing_steps.append("encode")
+		self.processed_columns = df.columns.tolist()
 		return self
 
 	def encode_categorical(
@@ -649,17 +796,65 @@ class DataPreprocessor:
 	# ------------------------------------------------------------------
 	# Feature engineering
 	# ------------------------------------------------------------------
-	def feature_engineering(self, min_speed: float = 0.0, max_speed: float = 150.0) -> "DataPreprocessor":
+	def feature_engineering(self, settings: Optional[Dict[str, Any]] = None) -> "DataPreprocessor":
 		if self.data is None:
 			return self
+
+		speed_settings = settings or SPEED_FEATURE or {}
+		if not speed_settings.get("enabled", False):
+			logger.info("⚙️  Bỏ qua feature_engineering vì SPEED_FEATURE.disabled")
+			return self
+
+		distance_col = speed_settings.get("distance_col", "Trip_Distance_km")
+		duration_col = speed_settings.get("duration_col", "Trip_Duration_Minutes")
+		feature_name = speed_settings.get("name", "Speed_kmh")
+		min_duration = max(float(speed_settings.get("min_duration_minutes", 1.0)), 1e-6)
+		round_digits = speed_settings.get("round_digits")
+
 		df = self.data
-		if {"Trip_Distance_km", "Trip_Duration_Minutes"}.issubset(df.columns):
-			duration_hours = df["Trip_Duration_Minutes"] / 60
-			df["Speed_kmh"] = np.where(duration_hours > 0, df["Trip_Distance_km"] / duration_hours, 0).round(2)
-			mask_invalid = (df["Speed_kmh"] < min_speed) | (df["Speed_kmh"] > max_speed)
-			if mask_invalid.any():
-				logger.info("Speed_kmh: Drop %s dòng ngoài miền", int(mask_invalid.sum()))
-				df = df.loc[~mask_invalid]
+		missing_cols = [col for col in (distance_col, duration_col) if col not in df.columns]
+		if missing_cols:
+			logger.warning("⚠️  Không thể tạo %s vì thiếu cột: %s", feature_name, missing_cols)
+			return self
+
+		logger.info(
+			"🚗 Feature engineering: %s = %s / (%s / 60) | min_duration=%.2f phút",
+			feature_name,
+			distance_col,
+			duration_col,
+			min_duration,
+		)
+
+		distance_series = pd.to_numeric(df[distance_col], errors="coerce")
+		duration_series = pd.to_numeric(df[duration_col], errors="coerce")
+		invalid_duration_mask = duration_series < min_duration
+		if invalid_duration_mask.any():
+			logger.warning(
+				"⚠️  %s dòng có %s < %.2f phút -> clip về ngưỡng an toàn",
+				int(invalid_duration_mask.sum()),
+				duration_col,
+				min_duration,
+			)
+			duration_series = duration_series.clip(lower=min_duration)
+
+		speed_series = distance_series / (duration_series / 60.0)
+		if isinstance(round_digits, int):
+			speed_series = speed_series.round(round_digits)
+
+		df[feature_name] = speed_series
+		if self.original_data is not None:
+			self.original_data[feature_name] = speed_series
+
+		stats = speed_series.describe()
+		logger.info(
+			"✅ %s tạo xong | min=%.2f | max=%.2f | mean=%.2f | non-null=%s",
+			feature_name,
+			stats.get("min", float("nan")),
+			stats.get("max", float("nan")),
+			stats.get("mean", float("nan")),
+			int(speed_series.notna().sum()),
+		)
+
 		self.data = df.reset_index(drop=True)
 		self.detect_types()
 		self.preprocessing_steps.append("feature_engineering")
@@ -829,6 +1024,8 @@ class DataPreprocessor:
 	def get_processed_data(self) -> pd.DataFrame:
 		if self.data is None:
 			raise ValueError("Chưa có dữ liệu")
+		if not self.processed_columns:
+			self.processed_columns = self.data.columns.tolist()
 		return self.data.copy()
 
 	def summary(self) -> Dict[str, Any]:

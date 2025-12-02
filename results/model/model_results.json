@@ -1,9 +1,9 @@
 {
     "polynomial": {
-        "train_rmse": 13.723622118968953,
-        "test_rmse": 11.620489763058908,
-        "test_mae": 8.734152682709459,
-        "test_r2": 0.8374470757996775,
+        "train_rmse": 10.334709980550196,
+        "test_rmse": 10.433785736876779,
+        "test_mae": 7.8750964316870125,
+        "test_r2": 0.7998005133282713,
         "hyperparams": {
             "degree": 2,
             "alpha": 7.579479953348009,
@@ -15,32 +15,32 @@
         }
     },
     "random_forest": {
-        "train_rmse": 5.493795945130722,
-        "test_rmse": 7.498931087661466,
-        "test_mae": 5.3807639700556695,
-        "test_r2": 0.9323068619913223,
+        "train_rmse": 4.474462372601223,
+        "test_rmse": 7.502213282980315,
+        "test_mae": 5.296564159658895,
+        "test_r2": 0.8964958066844773,
         "hyperparams": {
-            "n_estimators": 299,
+            "n_estimators": 126,
             "max_depth": 13,
-            "min_samples_split": 6,
-            "min_samples_leaf": 1
+            "min_samples_split": 5,
+            "min_samples_leaf": 2
         }
     },
     "xgboost": {
-        "train_rmse": 4.586911414291272,
-        "test_rmse": 7.198552315173615,
-        "test_mae": 4.5413054516058375,
-        "test_r2": 0.9376213097011521,
+        "train_rmse": 5.356988359718083,
+        "test_rmse": 6.804506810276634,
+        "test_mae": 4.376634756059212,
+        "test_r2": 0.9148523948249407,
         "hyperparams": {
-            "max_depth": 8,
-            "learning_rate": 0.03918131591409241,
-            "n_estimators": 167,
-            "subsample": 0.6460211816566274,
-            "colsample_bytree": 0.9700282199962534,
+            "max_depth": 4,
+            "learning_rate": 0.04378231588241702,
+            "n_estimators": 149,
+            "subsample": 0.6024730499293749,
+            "colsample_bytree": 0.9312404495902852,
             "random_state": 42,
-            "min_child_weight": 4,
-            "lambda": 0.49253767676861326,
-            "alpha": 0.6526812002249809
+            "min_child_weight": 3,
+            "lambda": 0.22475819755405224,
+            "alpha": 0.447620252684598
         }
     }
 }
