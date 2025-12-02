@@ -39,12 +39,26 @@ from src.visualization import DataVisualizer
 from config import MODEL_RESULTS_DIR, MODELS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE
 
 
-# Cấu hình logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
+
+
+def _divider(width: int = 70, char: str = "=") -> str:
+    return char * width
+
+
+def log_section(title: str, icon: str = "📘") -> None:
+    logger.info("\n%s", _divider())
+    logger.info("%s %s", icon, title.upper())
+    logger.info("%s", _divider())
+
+
+def log_step(message: str, icon: str = "🔸") -> None:
+    logger.info("%s %s", icon, message)
+
+
+def log_metrics(metrics: Dict[str, float]) -> None:
+    for label, value in metrics.items():
+        logger.info("   %-12s: %.6f", label, value)
 
 
 class ModelTrainer:
@@ -78,7 +92,7 @@ class ModelTrainer:
         Khởi tạo ModelTrainer.
         
         Args:
-            X_train, X_test: Features (ĐÃ SCALED từ preprocessing)
+            X_train, X_test: Features
             y_train, y_test: Target
             output_dir: Thư mục lưu kết quả
         """
@@ -109,8 +123,9 @@ class ModelTrainer:
         # Set random seed để reproducibility
         np.random.seed(self.RANDOM_SEED)
         
-        logger.info(f"✅ ModelTrainer khởi tạo thành công")
-        logger.info(f"   Train: {self.X_train.shape}, Test: {self.X_test.shape}")
+        log_section("MODELTRAINER KHỞI TẠO", icon="⚙️")
+        log_step("Khởi tạo thành công", icon="✅")
+        log_step(f"Train: {self.X_train.shape}, Test: {self.X_test.shape}", icon="📊")
     
     @property
     def data_info(self) -> Dict[str, Any]:
@@ -131,7 +146,6 @@ class ModelTrainer:
         
         pipeline = Pipeline([
             ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
-            ('scaler', StandardScaler()),
             ('regressor', Ridge(alpha=alpha))
         ])
         
@@ -147,9 +161,7 @@ class ModelTrainer:
         return rmse
     
     def optimize_polynomial(self, n_trials: int = 10, timeout: int = 300) -> Dict:
-        logger.info(f"\n{'='*70}")
-        logger.info("🔍 Tối ưu POLYNOMIAL REGRESSION bằng Optuna")
-        logger.info(f"{'='*70}")
+        log_section("TỐI ƯU POLYNOMIAL REGRESSION", icon="🔍")
         
         sampler = TPESampler(seed=self.RANDOM_SEED)
         pruner = MedianPruner()
@@ -167,8 +179,8 @@ class ModelTrainer:
         )
         
         best_params = study.best_params
-        logger.info(f"✅ Best params: {best_params}")
-        logger.info(f"   Best RMSE: {study.best_value:.6f}")
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
         
         self.optimization_history['polynomial'] = {
             'best_params': best_params,
@@ -179,8 +191,10 @@ class ModelTrainer:
     
     def train_polynomial(self, degree: int = 3, alpha: float = 1.0,
                          feature_subset: Optional[List[str]] = None) -> None:
-        """Huấn luyện Polynomial Regression với scaling và Ridge regularization."""
-        logger.info(f"\n📊 Training POLYNOMIAL REGRESSION (degree={degree}, alpha={alpha})")
+        """Huấn luyện Polynomial Regression (dữ liệu đã được scale ở preprocessing)."""
+        start_time = time.perf_counter()
+        log_section("TRAINING POLYNOMIAL REGRESSION", icon="📊")
+        log_step(f"degree={degree}, alpha={alpha}")
         if feature_subset:
             valid_features = [col for col in feature_subset if col in self.X_train.columns]
             missing = [col for col in feature_subset if col not in self.X_train.columns]
@@ -191,8 +205,8 @@ class ModelTrainer:
                 feature_subset = None
             else:
                 feature_subset = valid_features
-                logger.info(f"   Sử dụng {len(feature_subset)} feature có |corr| >= threshold")
-                logger.info(f"   Features: {feature_subset}")
+                log_step(f"Sử dụng {len(feature_subset)} feature có |corr| >= threshold", icon="📌")
+                log_step(f"Features: {feature_subset}", icon="🧮")
         
         base_X_train = self.X_train[feature_subset] if feature_subset else self.X_train
         base_X_test = self.X_test[feature_subset] if feature_subset else self.X_test
@@ -201,19 +215,14 @@ class ModelTrainer:
         X_train_poly = poly.fit_transform(base_X_train)
         X_test_poly = poly.transform(base_X_test)
         
-        logger.info(f"   Original features: {self.X_train.shape[1]}")
-        logger.info(f"   Polynomial features: {X_train_poly.shape[1]}")
-        
-        poly_scaler = StandardScaler()
-        X_train_poly_scaled = poly_scaler.fit_transform(X_train_poly)
-        X_test_poly_scaled = poly_scaler.transform(X_test_poly)
-        logger.info("   ✅ Polynomial features được scale (StandardScaler)")
+        log_step(f"Original features: {self.X_train.shape[1]}", icon="📊")
+        log_step(f"Polynomial features: {X_train_poly.shape[1]}", icon="🧱")
         
         model = Ridge(alpha=alpha)
-        model.fit(X_train_poly_scaled, self.y_train)
-        
-        y_pred_train = model.predict(X_train_poly_scaled)
-        y_pred_test = model.predict(X_test_poly_scaled)
+        model.fit(X_train_poly, self.y_train)
+
+        y_pred_train = model.predict(X_train_poly)
+        y_pred_test = model.predict(X_test_poly)
         
         train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
         test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
@@ -223,11 +232,10 @@ class ModelTrainer:
         self.models['polynomial'] = {
             'model': model,
             'poly': poly,
-            'poly_scaler': poly_scaler,
             'feature_subset': feature_subset
         }
-        self.X_train_transformed['polynomial'] = X_train_poly_scaled
-        self.X_test_transformed['polynomial'] = X_test_poly_scaled
+        self.X_train_transformed['polynomial'] = X_train_poly
+        self.X_test_transformed['polynomial'] = X_test_poly
         
         self.results['polynomial'] = {
             'train_rmse': float(train_rmse),
@@ -241,10 +249,13 @@ class ModelTrainer:
             }
         }
         
-        logger.info(f"   Train RMSE: {train_rmse:.6f}")
-        logger.info(f"   Test RMSE: {test_rmse:.6f}")
-        logger.info(f"   Test MAE: {test_mae:.6f}")
-        logger.info(f"   Test R²: {test_r2:.6f}")
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
     
     # ========== RANDOM FOREST REGRESSION ==========
     def _objective_rf(self, trial: optuna.Trial) -> float:
@@ -263,7 +274,7 @@ class ModelTrainer:
             n_jobs=-1
         )
         
-        # Dùng cross-validation TRÊN TRAIN SET (không dùng test set!)
+        # Dùng cross-validation TRÊN TRAIN SET
         from sklearn.model_selection import cross_val_score
         cv_scores = cross_val_score(
             model, self.X_train, self.y_train,
@@ -286,9 +297,7 @@ class ModelTrainer:
         Returns:
             Dictionary chứa best params
         """
-        logger.info(f"\n{'='*70}")
-        logger.info("🔍 Tối ưu RANDOM FOREST bằng Optuna")
-        logger.info(f"{'='*70}")
+        log_section("TỐI ƯU RANDOM FOREST", icon="🔍")
         
         sampler = TPESampler(seed=self.RANDOM_SEED)
         pruner = MedianPruner()
@@ -307,8 +316,8 @@ class ModelTrainer:
         )
         
         best_params = study.best_params
-        logger.info(f"✅ Best params: {best_params}")
-        logger.info(f"   Best RMSE: {study.best_value:.6f}")
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
         
         self.optimization_history['random_forest'] = {
             'best_params': best_params,
@@ -324,8 +333,9 @@ class ModelTrainer:
                  min_samples_split: int = 5,
                  min_samples_leaf: int = 2) -> None:
         """Huấn luyện Random Forest."""
-        logger.info(f"\n📊 Training RANDOM FOREST")
-        logger.info(f"   n_estimators={n_estimators}, max_depth={max_depth}")
+        start_time = time.perf_counter()
+        log_section("TRAINING RANDOM FOREST", icon="🌲")
+        log_step(f"n_estimators={n_estimators}, max_depth={max_depth}")
         
         model = RandomForestRegressor(
             n_estimators=n_estimators,
@@ -363,10 +373,13 @@ class ModelTrainer:
             }
         }
         
-        logger.info(f"   Train RMSE: {train_rmse:.6f}")
-        logger.info(f"   Test RMSE: {test_rmse:.6f}")
-        logger.info(f"   Test MAE: {test_mae:.6f}")
-        logger.info(f"   Test R²: {test_r2:.6f}")
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
     
     # ========== XGBOOST REGRESSION ==========
     def _objective_xgb(self, trial: optuna.Trial) -> float:
@@ -407,9 +420,7 @@ class ModelTrainer:
         Returns:
             Dictionary chứa best params
         """
-        logger.info(f"\n{'='*70}")
-        logger.info("🔍 Tối ưu XGBOOST bằng Optuna")
-        logger.info(f"{'='*70}")
+        log_section("TỐI ƯU XGBOOST", icon="🔍")
         
         sampler = TPESampler(seed=self.RANDOM_SEED)
         pruner = MedianPruner()
@@ -428,8 +439,8 @@ class ModelTrainer:
         )
         
         best_params = study.best_params
-        logger.info(f"✅ Best params: {best_params}")
-        logger.info(f"   Best RMSE: {study.best_value:.6f}")
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
         
         self.optimization_history['xgboost'] = {
             'best_params': best_params,
@@ -446,7 +457,8 @@ class ModelTrainer:
         Args:
             **xgb_params: XGBoost hyperparameters
         """
-        logger.info(f"\n📊 Training XGBOOST")
+        start_time = time.perf_counter()
+        log_section("TRAINING XGBOOST", icon="⚡")
         
         # Default params
         default_params = {
@@ -485,10 +497,13 @@ class ModelTrainer:
             'hyperparams': default_params
         }
         
-        logger.info(f"   Train RMSE: {train_rmse:.6f}")
-        logger.info(f"   Test RMSE: {test_rmse:.6f}")
-        logger.info(f"   Test MAE: {test_mae:.6f}")
-        logger.info(f"   Test R²: {test_r2:.6f}")
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
     
     # ========== SAVE & LOAD MODELS ==========
     def save_model(self, model_name: str, format: str = 'joblib') -> str:
@@ -517,7 +532,7 @@ class ModelTrainer:
             with open(filename, 'wb') as f:
                 pickle.dump(model_data, f)
         
-        logger.info(f"✅ Đã lưu mô hình: {filename}")
+        log_step(f"Đã lưu mô hình: {filename}", icon="💾")
         return str(filename)
     
     def load_model(self, filepath: str, model_name: str) -> None:
@@ -537,7 +552,7 @@ class ModelTrainer:
                 model_data = pickle.load(f)
         
         self.models[model_name] = model_data
-        logger.info(f"✅ Đã tải mô hình: {filepath}")
+        log_step(f"Đã tải mô hình: {filepath}", icon="📂")
     
     # ========== EVALUATION & COMPARISON ==========
     def get_best_model(self) -> Tuple[str, Dict]:
@@ -580,7 +595,7 @@ class ModelTrainer:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(results_serializable, f, indent=4, ensure_ascii=False)
         
-        logger.info(f"✅ Đã lưu kết quả: {filepath}")
+        log_step(f"Đã lưu kết quả: {filepath}", icon="💾")
     
     def plot_comparison(self, metric: str = 'test_r2', save: bool = True) -> None:
         """
@@ -634,18 +649,14 @@ class ModelTrainer:
     
     def plot_all_predictions(self, save: bool = True) -> None:
         """Vẽ biểu đồ predictions cho tất cả các mô hình."""
-        logger.info(f"\n{'='*70}")
-        logger.info("📈 VẼ BIỂU ĐỒ PREDICTIONS CHO TẤT CẢ MÔ HÌNH")
-        logger.info(f"{'='*70}\n")
+        log_section("VẼ BIỂU ĐỒ PREDICTIONS CHO TẤT CẢ MÔ HÌNH", icon="📈")
         
         for model_name in self.models.keys():
             self.plot_predictions(model_name, save=save)
     
     def summary(self) -> None:
         """In ra tóm tắt kết quả các mô hình."""
-        logger.info(f"\n{'='*70}")
-        logger.info("📊 TÓM TẮT KẾT QUẢ TRAINING")
-        logger.info(f"{'='*70}\n")
+        log_section("TÓM TẮT KẾT QUẢ TRAINING", icon="📊")
         
         summary_data = []
         for model_name, result in self.results.items():
@@ -662,10 +673,11 @@ class ModelTrainer:
         
         best_name, best_result = self.get_best_model()
         if best_name:
-            logger.info(f"\n✨ MÔ HÌNH TỐT NHẤT: {best_name.upper()}")
-            logger.info(f"   Test R²: {best_result['test_r2']:.6f}")
-        
-        logger.info(f"\n{'='*70}\n")
+            log_section("MÔ HÌNH TỐT NHẤT", icon="✨")
+            log_step(f"Model: {best_name.upper()}", icon="🏆")
+            log_metrics({"Test R²": best_result['test_r2'], "Test RMSE": best_result['test_rmse'], "Test MAE": best_result['test_mae']})
+
+        logger.info("%s\n", _divider())
     
     # ========== DATA PREPARATION ==========
     @staticmethod
@@ -687,22 +699,20 @@ class ModelTrainer:
         Returns:
             (X_train, X_test, y_train, y_test)
         """
-        logger.info(f"\n{'='*70}")
-        logger.info("🔄 CHUẨN BỊ DỮ LIỆU CHO TRAINING")
-        logger.info(f"{'='*70}")
+        log_section("CHUẨN BỊ DỮ LIỆU CHO TRAINING", icon="🔄")
         
         # Tách Features và Target
         X = df.drop(target_col, axis=1)
         y = df[target_col]
         
-        logger.info(f"Total samples: {len(df)}, Features: {X.shape[1]}")
+        log_step(f"Total samples: {len(df)}, Features: {X.shape[1]}", icon="📦")
         
         # Chia Train/Test
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=test_size, random_state=random_state
         )
         
-        logger.info(f"Train set: {X_train.shape[0]}, Test set: {X_test.shape[0]}")
+        log_step(f"Train set: {X_train.shape[0]}, Test set: {X_test.shape[0]}", icon="🔀")
         
         # Scale dữ liệu nếu cần (KHÔNG khuyến nghị)
         if scale:
@@ -715,29 +725,34 @@ class ModelTrainer:
             X_train = pd.DataFrame(X_train_scaled, columns=X.columns)
             X_test = pd.DataFrame(X_test_scaled, columns=X.columns)
             
-            logger.info(f"✅ Dữ liệu đã được chuẩn hóa (StandardScaler)")
+            log_step("Dữ liệu đã được chuẩn hóa (StandardScaler)", icon="✅")
         
-        logger.info(f"   X_train shape: {X_train.shape}")
-        logger.info(f"   X_test shape: {X_test.shape}\n")
+        log_step(f"X_train shape: {X_train.shape}", icon="📊")
+        log_step(f"X_test shape: {X_test.shape}", icon="📊")
         
         return X_train, X_test, y_train, y_test
     
     # ========== SAVE ALL MODELS ==========
-    def save_all_models(self, format: str = 'joblib') -> None:
+    def save_all_models(self, format: str = 'joblib') -> Dict[str, str]:
         """
-        Lưu tất cả các mô hình đã train.
-        
+        Lưu tất cả các mô hình đã train và trả về đường dẫn tương ứng.
+
         Args:
             format: Định dạng ('joblib' hoặc 'pickle')
+
+        Returns:
+            Dict mapping tên mô hình -> đường dẫn file đã lưu
         """
-        logger.info(f"\n{'='*70}")
-        logger.info("💾 LƯU TẤT CẢ CÁC MÔ HÌNH")
-        logger.info(f"{'='*70}")
-        
+        log_section("LƯU TẤT CẢ CÁC MÔ HÌNH", icon="💾")
+
+        saved_paths: Dict[str, str] = {}
         for model_name in self.models.keys():
-            self.save_model(model_name, format=format)
-        
-        logger.info(f"\n✅ Hoàn tất lưu {len(self.models)} mô hình!\n")
+            path = self.save_model(model_name, format=format)
+            if path:
+                saved_paths[model_name] = path
+
+        log_step(f"Hoàn tất lưu {len(saved_paths)} mô hình!", icon="✅")
+        return saved_paths
     
     def predict(self, X: pd.DataFrame, model_name: Optional[str] = None) -> np.ndarray:
         """
@@ -760,14 +775,12 @@ class ModelTrainer:
         
         model_obj = self.models[model_name]['model']
         
-        # Xử lý cho Polynomial (cần transform + scale)
+        # Xử lý cho Polynomial (cần transform lại với PolynomialFeatures)
         if model_name == 'polynomial':
             poly = self.models[model_name]['poly']
-            poly_scaler = self.models[model_name]['poly_scaler']
             feature_subset = self.models[model_name].get('feature_subset')
             X_input = X[feature_subset] if feature_subset else X
             X_poly = poly.transform(X_input)
-            X_poly = poly_scaler.transform(X_poly)
             return model_obj.predict(X_poly)
         
         # Các model khác dùng X trực tiếp (đã scaled từ preprocessing)
@@ -843,9 +856,7 @@ class ModelTrainer:
     
     def plot_all_feature_importance(self, top_n: int = 15, save: bool = True) -> None:
         """Vẽ feature importance cho tất cả mô hình hỗ trợ (bỏ qua Polynomial)."""
-        logger.info(f"\n{'='*70}")
-        logger.info("📊 VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH")
-        logger.info(f"{'='*70}\n")
+        log_section("VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH", icon="📊")
         
         # Lọc các models hỗ trợ feature importance
         supported_models = [m for m in self.models.keys() if m != 'polynomial']
@@ -865,9 +876,7 @@ class ModelTrainer:
             top_n: Số features hiển thị
             save: Có lưu biểu đồ không
         """
-        logger.info(f"\n{'='*70}")
-        logger.info("📊 SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH")
-        logger.info(f"{'='*70}\n")
+        log_section("SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH", icon="📊")
         
         # Lấy feature importance từ các mô hình (chỉ RF và XGBoost)
         importances = {}

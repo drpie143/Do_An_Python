@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, Set
 
 import numpy as np
 import pandas as pd
+import joblib
 from sklearn.base import clone
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import (
@@ -26,7 +27,6 @@ from src.visualization import DataVisualizer
 from config import EDA_RESULTS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 MissingRule = Union[str, Tuple[str, Any]]
@@ -66,16 +66,32 @@ class DataPreprocessor:
 		self.default_scaler = self._init_default_scaler(scaler_type)
 		self.default_encoder = self._init_default_encoder(encoder_type)
 
-		self.visualizer = DataVisualizer(
-			data=self.data,
-			target_col=None,
-			output_dir=EDA_RESULTS_DIR,
-			auto_save=True,
-			auto_show=False,
-			dpi=PLOT_DPI,
-			style=PLOT_STYLE,
-			figure_size=FIGURE_SIZE,
-		)
+		self._visualizer_init_args = {
+			"target_col": None,
+			"output_dir": EDA_RESULTS_DIR,
+			"auto_save": True,
+			"auto_show": False,
+			"dpi": PLOT_DPI,
+			"style": PLOT_STYLE,
+			"figure_size": FIGURE_SIZE,
+		}
+		self.visualizer = DataVisualizer(data=self.data, **self._visualizer_init_args)
+
+		self.impute_values: Dict[str, Any] = {}
+		self.onehot_feature_names: Dict[str, List[str]] = {}
+		self.feature_columns: List[str] = []
+		self._scale_exclude: List[str] = []
+		self._scaling_method: Optional[str] = None
+		self._encoding_method: Optional[str] = None
+		self._is_fitted: bool = False
+		self._capture_config: bool = True
+		self._unify_applied: bool = False
+		self._text_unify_rules: Optional[Dict[str, Dict[str, str]]] = None
+		self._feature_engineering_config: Optional[Dict[str, Any]] = None
+		self._datetime_feature_configs: List[Dict[str, Any]] = []
+		self._datetime_config_keys: Set[Tuple[str, Tuple[str, ...], bool]] = set()
+		self._interaction_configs: List[Dict[str, Any]] = []
+		self._interaction_config_keys: Set[Tuple[Tuple[Tuple[str, str], ...], Tuple[str, ...]]] = set()
 
 		if self.data is not None:
 			self.detect_types()
@@ -284,7 +300,7 @@ class DataPreprocessor:
 		self._update_visualizer()
 		return self
 
-	def fill_missing(self, missing_rules: Optional[Dict[str, MissingRule]] = None) -> "DataPreprocessor":
+	def fill_missing(self, missing_rules: Optional[Dict[str, MissingRule]] = None, *, fit: bool = True) -> "DataPreprocessor":
 		if self.data is None:
 			raise ValueError("Chưa có dữ liệu")
 		if missing_rules:
@@ -311,35 +327,65 @@ class DataPreprocessor:
 
 			try:
 				if strategy == "drop":
-					before = len(df)
-					df = df.dropna(subset=[col])
-					logger.info("%s: Drop %s dòng", col, before - len(df))
+					if fit:
+						before = len(df)
+						df = df.dropna(subset=[col])
+						logger.info("%s: Drop %s dòng", col, before - len(df))
+					self.impute_values[col] = "__drop__"
 				elif strategy == "mean" and pd.api.types.is_numeric_dtype(df[col]):
-					df[col] = df[col].fillna(df[col].mean())
+					value = df[col].mean() if fit else self.impute_values.get(col)
+					if value is None:
+						value = df[col].mean()
+					df[col] = df[col].fillna(value)
+					if fit:
+						self.impute_values[col] = value
 				elif strategy == "median" and pd.api.types.is_numeric_dtype(df[col]):
-					df[col] = df[col].fillna(df[col].median())
+					value = df[col].median() if fit else self.impute_values.get(col)
+					if value is None:
+						value = df[col].median()
+					df[col] = df[col].fillna(value)
+					if fit:
+						self.impute_values[col] = value
 				elif strategy == "mode":
-					mode_val = df[col].mode().iloc[0] if not df[col].mode().empty else custom_value
+					if fit:
+						mode_val = df[col].mode().iloc[0] if not df[col].mode().empty else custom_value
+						self.impute_values[col] = mode_val
+					else:
+						mode_val = self.impute_values.get(col)
+						if mode_val is None and not df[col].mode().empty:
+							mode_val = df[col].mode().iloc[0]
 					df[col] = df[col].fillna(mode_val)
 				elif strategy == "constant":
-					fill_val = custom_value
-					if fill_val is None:
-						fill_val = 0 if pd.api.types.is_numeric_dtype(df[col]) else "Unknown"
+					if fit:
+						fill_val = custom_value
+						if fill_val is None:
+							fill_val = 0 if pd.api.types.is_numeric_dtype(df[col]) else "Unknown"
+						self.impute_values[col] = fill_val
+					else:
+						fill_val = self.impute_values.get(col, custom_value)
+						if fill_val is None:
+							fill_val = 0 if pd.api.types.is_numeric_dtype(df[col]) else "Unknown"
 					df[col] = df[col].fillna(fill_val)
 				elif strategy == "ffill":
 					df[col] = df[col].ffill()
 				elif strategy == "bfill":
 					df[col] = df[col].bfill()
 				else:
-					# fallback
-					default_value = df[col].median() if pd.api.types.is_numeric_dtype(df[col]) else df[col].mode().iloc[0]
+					if fit:
+						default_value = df[col].median() if pd.api.types.is_numeric_dtype(df[col]) else df[col].mode().iloc[0]
+						self.impute_values[col] = default_value
+					else:
+						default_value = self.impute_values.get(col)
+						if default_value is None:
+							default_value = df[col].median() if pd.api.types.is_numeric_dtype(df[col]) else df[col].mode().iloc[0]
 					df[col] = df[col].fillna(default_value)
 			except Exception as exc:
 				self._log("missing_error", f"{col}: {exc}")
 				logger.error("Lỗi xử lý missing cho %s: %s", col, exc)
 
 		self.data = df.reset_index(drop=True)
-		self.preprocessing_steps.append("fill_missing")
+		if fit:
+			self.preprocessing_steps.append("fill_missing")
 		self._update_visualizer()
 		return self
 
@@ -368,6 +414,10 @@ class DataPreprocessor:
 		self.detect_types()
 		cat_cols = self.types_.get("categorical_data", [])
 		df = self.data
+		if self._capture_config:
+			self._unify_applied = True
+			if text_rules:
+				self._text_unify_rules = text_rules
 
 		for col in cat_cols:
 			try:
@@ -378,7 +428,8 @@ class DataPreprocessor:
 				self._log("unify_error", f"{col}: {exc}")
 
 		self.data = df
-		self.preprocessing_steps.append("unify_values")
+		if self._capture_config:
+			self.preprocessing_steps.append("unify_values")
 		return self
 
 	def handle_outliers(self, outlier_rules: Optional[Dict[str, str]] = None) -> "DataPreprocessor":
@@ -432,7 +483,7 @@ class DataPreprocessor:
 	# ------------------------------------------------------------------
 	# Scaling and encoding
 	# ------------------------------------------------------------------
-	def scale(self, scaler_rules: Optional[Dict[str, str]] = None) -> "DataPreprocessor":
+	def scale(self, scaler_rules: Optional[Dict[str, str]] = None, *, fit: bool = True) -> "DataPreprocessor":
 		if self.data is None:
 			return self
 		self.detect_types()
@@ -448,22 +499,35 @@ class DataPreprocessor:
 		for col, method in self.scaler_rules.items():
 			if col not in num_cols:
 				continue
-			scaler = self._init_default_scaler(method)
-			if scaler is None:
-				continue
-			df[[col]] = scaler.fit_transform(df[[col]])
-			self.scalers[col] = scaler
+			if fit:
+				scaler = self._init_default_scaler(method)
+				if scaler is None:
+					continue
+				df[[col]] = scaler.fit_transform(df[[col]])
+				self.scalers[col] = scaler
+			else:
+				scaler = self.scalers.get(col)
+				if scaler is None:
+					continue
+				df[[col]] = scaler.transform(df[[col]])
 			scaled_cols.add(col)
 
 		remaining_cols = [col for col in num_cols if col not in scaled_cols]
 		if self.default_scaler and remaining_cols:
 			for col in remaining_cols:
-				scaler = clone(self.default_scaler)
-				df[[col]] = scaler.fit_transform(df[[col]])
-				self.scalers[col] = scaler
+				if fit:
+					scaler = clone(self.default_scaler)
+					df[[col]] = scaler.fit_transform(df[[col]])
+					self.scalers[col] = scaler
+				else:
+					scaler = self.scalers.get(col)
+					if scaler is None:
+						continue
+					df[[col]] = scaler.transform(df[[col]])
 
 		self.data = df
-		self.preprocessing_steps.append("scale")
+		if fit:
+			self.preprocessing_steps.append("scale")
 		return self
 
 	def scale_features(
@@ -471,16 +535,23 @@ class DataPreprocessor:
 		method: str = "standard",
 		columns: Optional[List[str]] = None,
 		exclude_columns: Optional[List[str]] = None,
+		*,
+		fit: bool = True,
 	) -> "DataPreprocessor":
+		if not fit and self._scaling_method is not None:
+			method = self._scaling_method
 		self.detect_types()
 		target_cols = columns or self.types_.get("numeric_data", [])
 		if exclude_columns:
 			target_cols = [col for col in target_cols if col not in exclude_columns]
-		self.scaler_rules = {col: method for col in target_cols}
-		self.default_scaler = None
-		return self.scale()
+		if fit:
+			self._scaling_method = method
+			self._scale_exclude = exclude_columns or []
+			self.scaler_rules = {col: method for col in target_cols}
+			self.default_scaler = None
+		return self.scale(fit=fit)
 
-	def encode(self, encoder_rules: Optional[Dict[str, str]] = None) -> "DataPreprocessor":
+	def encode(self, encoder_rules: Optional[Dict[str, str]] = None, *, fit: bool = True) -> "DataPreprocessor":
 		if self.data is None:
 			return self
 		self.detect_types()
@@ -506,23 +577,43 @@ class DataPreprocessor:
 
 			try:
 				if method == "label":
-					encoder = LabelEncoder()
-					df[col] = encoder.fit_transform(df[col].astype(str))
-					self.encoders[col] = encoder
+					encoder = self.encoders.get(col) if not fit else LabelEncoder()
+					if fit:
+						df[col] = encoder.fit_transform(df[col].astype(str))
+						self.encoders[col] = encoder
+					elif encoder:
+						df[col] = encoder.transform(df[col].astype(str))
 				elif method == "ordinal":
-					encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
-					df[[col]] = encoder.fit_transform(df[[col]].astype(str))
-					self.encoders[col] = encoder
+					encoder = self.encoders.get(col) if not fit else OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+					if fit:
+						df[[col]] = encoder.fit_transform(df[[col]].astype(str))
+						self.encoders[col] = encoder
+					elif encoder:
+						df[[col]] = encoder.transform(df[[col]].astype(str))
 				elif method == "onehot":
-					encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore", dtype=int)
-					matrix = encoder.fit_transform(df[[col]].astype(str))
-					cols = encoder.get_feature_names_out([col])
-					temp_df = pd.DataFrame(matrix, columns=cols, index=df.index)
-					if self._onehot_drop_first and temp_df.shape[1] > 1:
-						temp_df = temp_df.iloc[:, 1:]
-					onehot_frames.append(temp_df)
-					cols_to_drop.append(col)
-					self.encoders[col] = encoder
+					encoder = self.encoders.get(col) if not fit else OneHotEncoder(sparse_output=False, handle_unknown="ignore", dtype=int)
+					if encoder is None:
+						continue
+					if fit:
+						matrix = encoder.fit_transform(df[[col]].astype(str))
+						cols = encoder.get_feature_names_out([col])
+						temp_df = pd.DataFrame(matrix, columns=cols, index=df.index)
+						if self._onehot_drop_first and temp_df.shape[1] > 1:
+							temp_df = temp_df.iloc[:, 1:]
+						self.onehot_feature_names[col] = temp_df.columns.tolist()
+						onehot_frames.append(temp_df)
+						cols_to_drop.append(col)
+						self.encoders[col] = encoder
+					else:
+						matrix = encoder.transform(df[[col]].astype(str))
+						cols = encoder.get_feature_names_out([col])
+						temp_df = pd.DataFrame(matrix, columns=cols, index=df.index)
+						if self._onehot_drop_first and temp_df.shape[1] > 1:
+							temp_df = temp_df.iloc[:, 1:]
+						saved_cols = self.onehot_feature_names.get(col, temp_df.columns.tolist())
+						temp_df = temp_df.reindex(columns=saved_cols, fill_value=0)
+						onehot_frames.append(temp_df)
+						cols_to_drop.append(col)
 			except Exception as exc:
 				self._log("encode_error", f"{col}: {exc}")
 
@@ -531,7 +622,8 @@ class DataPreprocessor:
 			df.drop(columns=cols_to_drop, inplace=True)
 
 		self.data = df
-		self.preprocessing_steps.append("encode")
+		if fit:
+			self.preprocessing_steps.append("encode")
 		return self
 
 	def encode_categorical(
@@ -539,14 +631,19 @@ class DataPreprocessor:
 		method: str = "onehot",
 		columns: Optional[List[str]] = None,
 		drop_first: bool = True,
+		*,
+		fit: bool = True,
 	) -> "DataPreprocessor":
 		self._onehot_drop_first = drop_first
-		if method == "onehot" and columns:
-			self.encoder_rules = {col: "onehot" for col in columns}
-		elif method == "label" and columns:
-			self.encoder_rules = {col: "label" for col in columns}
-		self.default_encoder = self._init_default_encoder(method)
-		return self.encode()
+		if fit:
+			self._encoding_method = method
+			if method == "onehot" and columns:
+				self.encoder_rules = {col: "onehot" for col in columns}
+			elif method == "label" and columns:
+				self.encoder_rules = {col: "label" for col in columns}
+		if fit:
+			self.default_encoder = self._init_default_encoder(method)
+		return self.encode(fit=fit)
 
 	# ------------------------------------------------------------------
 	# Feature engineering
@@ -555,6 +652,8 @@ class DataPreprocessor:
 		if self.data is None:
 			return self
 		df = self.data
+		if self._capture_config:
+			self._feature_engineering_config = {"min_speed": min_speed, "max_speed": max_speed}
 		if {"Trip_Distance_km", "Trip_Duration_Minutes"}.issubset(df.columns):
 			duration_hours = df["Trip_Duration_Minutes"] / 60
 			df["Speed_kmh"] = np.where(duration_hours > 0, df["Trip_Distance_km"] / duration_hours, 0).round(2)
@@ -564,7 +663,8 @@ class DataPreprocessor:
 				df = df.loc[~mask_invalid]
 		self.data = df.reset_index(drop=True)
 		self.detect_types()
-		self.preprocessing_steps.append("feature_engineering")
+		if self._capture_config:
+			self.preprocessing_steps.append("feature_engineering")
 		return self
 
 	def create_datetime_features(
@@ -578,6 +678,13 @@ class DataPreprocessor:
 		df = self.data
 		if not pd.api.types.is_datetime64_any_dtype(df[datetime_col]):
 			df[datetime_col] = pd.to_datetime(df[datetime_col], errors="coerce")
+		if self._capture_config:
+			config_key = (datetime_col, tuple(features), drop_original)
+			if config_key not in self._datetime_config_keys:
+				self._datetime_config_keys.add(config_key)
+				self._datetime_feature_configs.append(
+					{"datetime_col": datetime_col, "features": tuple(features), "drop_original": drop_original}
+				)
 
 		mapping = {
 			"hour": df[datetime_col].dt.hour,
@@ -594,7 +701,8 @@ class DataPreprocessor:
 			df.drop(columns=[datetime_col], inplace=True)
 		self.data = df
 		self.detect_types()
-		self.preprocessing_steps.append("create_datetime_features")
+		if self._capture_config:
+			self.preprocessing_steps.append("create_datetime_features")
 		return self
 
 	def create_interaction_features(
@@ -605,6 +713,14 @@ class DataPreprocessor:
 		if self.data is None:
 			return self
 		df = self.data
+		if self._capture_config:
+			normalized_pairs = [tuple(pair) for pair in col_pairs]
+			config_key = (tuple(normalized_pairs), tuple(operations))
+			if config_key not in self._interaction_config_keys:
+				self._interaction_config_keys.add(config_key)
+				self._interaction_configs.append(
+					{"col_pairs": normalized_pairs, "operations": tuple(operations)}
+				)
 		for col1, col2 in col_pairs:
 			if col1 not in df.columns or col2 not in df.columns:
 				continue
@@ -619,7 +735,8 @@ class DataPreprocessor:
 					df[f"{col1}_div_{col2}"] = df[col1] / (df[col2] + 1e-6)
 		self.data = df
 		self.detect_types()
-		self.preprocessing_steps.append("create_interaction_features")
+		if self._capture_config:
+			self.preprocessing_steps.append("create_interaction_features")
 		return self
 
 	# ------------------------------------------------------------------
@@ -710,6 +827,19 @@ class DataPreprocessor:
 	def save_data(self, filepath: str, index: bool = False, **kwargs) -> None:
 		self.save(filepath, index=index)
 
+	def save_state(self, path: Union[str, Path]) -> str:
+		"""Persist the fitted preprocessor so inference pipelines can reload it."""
+		path = Path(path)
+		path.parent.mkdir(parents=True, exist_ok=True)
+		joblib.dump(self, path)
+		logger.info("✅ Đã lưu cấu hình tiền xử lý tại %s", path)
+		return str(path)
+
+	@staticmethod
+	def load_state(path: Union[str, Path]) -> "DataPreprocessor":
+		"""Load a previously saved preprocessor state."""
+		return joblib.load(Path(path))
+
 	def get_processed_data(self) -> pd.DataFrame:
 		if self.data is None:
 			raise ValueError("Chưa có dữ liệu")
@@ -733,4 +863,74 @@ class DataPreprocessor:
 		logger.info("📊 TÓM TẮT DỮ LIỆU")
 		logger.info("%s", info)
 		logger.info("%s", "=" * 70)
+
+	def mark_as_fitted(self) -> None:
+		if self.data is None:
+			return
+		self.feature_columns = self.data.columns.tolist()
+		self._is_fitted = True
+
+	def transform_new_data(self, df: pd.DataFrame) -> pd.DataFrame:
+		if not self._is_fitted:
+			raise ValueError("Preprocessor chưa được fit trên dữ liệu train")
+		original_data = self.data
+		original_numeric = self.numeric_cols.copy()
+		original_categorical = self.categorical_cols.copy()
+		try:
+			self._capture_config = False
+			self.data = df.copy()
+			self.detect_types()
+			self.apply_constraints()
+			if self._unify_applied or self._text_unify_rules:
+				self.unify_values(text_rules=self._text_unify_rules)
+			if self._datetime_feature_configs:
+				for config in self._datetime_feature_configs:
+					self.create_datetime_features(
+						datetime_col=config["datetime_col"],
+						features=config["features"],
+						drop_original=config["drop_original"],
+					)
+			if self._feature_engineering_config:
+				self.feature_engineering(**self._feature_engineering_config)
+			self.fill_missing(fit=False)
+			encoding_method = self._encoding_method or "onehot"
+			self.encode_categorical(method=encoding_method, fit=False)
+			exclude_cols = self._scale_exclude
+			self.scale_features(method=self._scaling_method or "standard", exclude_columns=exclude_cols, fit=False)
+			if self._interaction_configs:
+				for config in self._interaction_configs:
+					self.create_interaction_features(
+						col_pairs=[tuple(pair) for pair in config["col_pairs"]],
+						operations=config["operations"],
+					)
+			if self.feature_columns:
+				self.data = self.data.reindex(columns=self.feature_columns, fill_value=0)
+			return self.data.copy()
+		finally:
+			self._capture_config = True
+			self.data = original_data
+			self.numeric_cols = original_numeric
+			self.categorical_cols = original_categorical
+			if self.data is not None:
+				self.detect_types()
+
+	def __getstate__(self) -> Dict[str, Any]:
+		state = self.__dict__.copy()
+		state["visualizer"] = None
+		state["_visualizer_state"] = self._visualizer_init_args
+		return state
+
+	def __setstate__(self, state: Dict[str, Any]) -> None:
+		visualizer_state = state.pop("_visualizer_state", None)
+		self.__dict__.update(state)
+		viz_args = visualizer_state or {
+			"target_col": None,
+			"output_dir": EDA_RESULTS_DIR,
+			"auto_save": True,
+			"auto_show": False,
+			"dpi": PLOT_DPI,
+			"style": PLOT_STYLE,
+			"figure_size": FIGURE_SIZE,
+		}
+		self.visualizer = DataVisualizer(data=self.data, **viz_args)
 
