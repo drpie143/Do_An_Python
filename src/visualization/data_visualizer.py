@@ -74,13 +74,14 @@ class DataVisualizer:
         elif self.auto_save and self.output_dir:
             base = self._sanitize_name(default_name)
             path = self.output_dir / f"{base}.png"
-            counter = 1
-            while path.exists():
-                path = self.output_dir / f"{base}_{counter}.png"
-                counter += 1
         else:
             return None
         path.parent.mkdir(parents=True, exist_ok=True)
+        if path.exists():
+            try:
+                path.unlink()
+            except OSError as exc:
+                logger.warning("Không thể xóa file cũ %s: %s", path, exc)
         return path
 
     def _finalize_plot(
