@@ -52,6 +52,7 @@ class DataPreprocessor:
 
 		self.missing_strategy = missing_strategy
 		self.categorical_missing_strategy = categorical_missing_strategy
+		
 		self.missing_rules: Dict[str, MissingRule] = {}
 		self.constraint_rules: Dict[str, Dict[str, Any]] = {}
 		self.outlier_rules: Dict[str, str] = {}
@@ -200,53 +201,120 @@ class DataPreprocessor:
 		logger.info("📊 BÁO CÁO TỔNG QUAN DỮ LIỆU")
 		logger.info("%s", "=" * 70)
 
+		# ----------------------------------------------------------------------
+		# 1) SHAPE - DUPLICATES - MEMORY - MISSING SNAPSHOT
+		# ----------------------------------------------------------------------
 		n_rows, n_cols = df.shape
 		n_dups = df.duplicated().sum()
 		memory_usage = df.memory_usage(deep=True).sum() / 1024 ** 2
+		total_missing = int(df.isna().sum().sum())
+		missing_pct = round((total_missing / (n_rows * n_cols)) * 100, 2) if n_rows and n_cols else 0.0
+
 		overview["shape"] = (n_rows, n_cols)
 		overview["duplicates"] = int(n_dups)
 		overview["memory_mb"] = float(memory_usage)
+		overview["missing_summary"] = {
+			"total_missing": total_missing,
+			"missing_pct": missing_pct,
+		}
 
-		logger.info("Rows: %s | Columns: %s | Duplicates: %s", n_rows, n_cols, n_dups)
-		logger.info("Memory usage: %.2f MB", memory_usage)
+		logger.info("[1] Rows: %s | Columns: %s | Duplicates: %s", n_rows, n_cols, n_dups)
+		logger.info("Memory usage: %.2f MB | Missing: %s (%.2f%%)", memory_usage, total_missing, missing_pct)
+		if missing_pct >= 10:
+			logger.warning("⚠ Tỉ lệ thiếu dữ liệu toàn bảng đang ở mức %.2f%%", missing_pct)
 
+		# ----------------------------------------------------------------------
+		# 2) DTYPES SUMMARY
+		# ----------------------------------------------------------------------
 		dtype_counts = df.dtypes.value_counts().to_dict()
 		overview["dtype_counts"] = dtype_counts
-		logger.info("Dtypes summary: %s", dtype_counts)
+		logger.info("[2] Dtypes summary: %s", dtype_counts)
 
+		# ----------------------------------------------------------------------
+		# 3) COLUMN METADATA
+		# ----------------------------------------------------------------------
 		info_df = pd.DataFrame(
 			{
 				"dtype": df.dtypes,
 				"missing": df.isna().sum(),
 				"missing_pct": (df.isna().sum() / len(df) * 100).round(2),
 				"unique": df.nunique(),
+				"constant": [df[col].nunique() <= 1 for col in df.columns],
 			}
 		)
+
 		overview["column_profile"] = info_df
-		logger.info("Top columns with missing data:\n%s", info_df.sort_values("missing_pct", ascending=False).head(top_n))
-
-		return overview
-
-	def check_missing(self) -> Optional[pd.DataFrame]:
-		if self.data is None:
-			logger.warning("❌ Chưa load dữ liệu")
-			return None
-
-		missing_count = self.data.isnull().sum()
-		missing_percent = (missing_count / len(self.data)) * 100
-		missing_df = pd.DataFrame(
-			{
-				"Column": missing_count.index,
-				"Missing_Count": missing_count.values,
-				"Missing_Percent": missing_percent.values,
-			}
+		logger.info(
+			"[3] Top %s columns with highest missing pct:\n%s",
+			top_n,
+			info_df.sort_values("missing_pct", ascending=False).head(top_n),
 		)
-		missing_df = missing_df[missing_df["Missing_Count"] > 0].sort_values("Missing_Count", ascending=False)
-		if not missing_df.empty:
-			logger.info("⚠️  Phát hiện %s cột có missing values", len(missing_df))
+
+		high_missing = info_df[info_df["missing_pct"] > 50]
+		if not high_missing.empty:
+			logger.warning("⚠ Cột thiếu dữ liệu >50%%: %s", high_missing.index.tolist())
+		constant_cols = info_df[info_df["constant"] == True]
+		if not constant_cols.empty:
+			logger.warning("⚠ Cột hằng số (unique=1): %s", constant_cols.index.tolist())
+
+		# ----------------------------------------------------------------------
+		# 4) THỐNG KÊ SỐ - DESCRIPTIVE + SKEWNESS
+		# ----------------------------------------------------------------------
+		num_cols = self.types_.get("numeric_data", [])
+		numeric_summary = None
+
+		if num_cols:
+			desc = df[num_cols].describe().T
+			desc["skewness"] = df[num_cols].skew()
+			numeric_summary = desc[["mean", "std", "min", "50%", "max", "skewness"]]
+
+			overview["numeric_summary"] = numeric_summary
+			logger.info("[4] Numeric statistics with skewness:\n%s", numeric_summary)
+			skewed_cols = numeric_summary[numeric_summary["skewness"].abs() > 1].index.tolist()
+			if skewed_cols:
+				logger.warning("⚠ Các cột có phân phối lệch mạnh (|skew| > 1): %s", skewed_cols)
 		else:
-			logger.info("✅ Không có missing values")
-		return missing_df
+			logger.info("[4] Không có cột số.")
+
+		# ----------------------------------------------------------------------
+		# 5) CATEGORICAL VALUE COUNTS
+		# ----------------------------------------------------------------------
+		cat_cols = self.types_.get("categorical_data", [])
+		cat_summary = {}
+		rare_categories: Dict[str, List[str]] = {}
+
+		if cat_cols:
+			for col in cat_cols:
+				vc = df[col].value_counts(dropna=False).head(top_n)
+				cat_summary[col] = vc
+				logger.info("[5] Top %s values for column '%s':\n%s", top_n, col, vc)
+				normalized = df[col].value_counts(normalize=True, dropna=False)
+				rare = normalized[normalized < 0.05].index.tolist()
+				if rare:
+					rare_categories[col] = rare
+		else:
+			logger.info("[5] Không có cột phân loại.")
+
+		overview["categorical_summary"] = cat_summary
+		if rare_categories:
+			overview["rare_categories"] = rare_categories
+			logger.warning("⚠ Phát hiện giá trị hiếm (<5%%) ở các cột: %s", rare_categories)
+
+		# ----------------------------------------------------------------------
+		# 6) CORRELATION SNAPSHOT
+		# ----------------------------------------------------------------------
+		if num_cols and len(num_cols) > 1:
+			corr_matrix = df[num_cols].corr(numeric_only=True).abs()
+			if corr_matrix.notna().any().any():
+				upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+				stacked = upper.stack().sort_values(ascending=False)
+				if not stacked.empty:
+					top_corr = stacked.head(top_n)
+					overview["top_correlations"] = top_corr
+					logger.info("[6] Top %s strong feature correlations:\n%s", top_n, top_corr)
+
+		logger.info("=" * 70)
+		return overview
 
 	# ------------------------------------------------------------------
 	# Cleaning steps
@@ -273,9 +341,10 @@ class DataPreprocessor:
 				converted = pd.to_numeric(df[col], errors="coerce") if desired_type in {"int", "float"} else df[col]
 				mask_bad = converted.isna() & df[col].notna()
 				if mask_bad.any():
+					bad_rows = df.index[mask_bad].tolist()
 					df = df.loc[~mask_bad]
 					df[col] = converted.loc[df.index]
-					logger.info("%s: Đã loại bỏ %s dòng sai kiểu", col, mask_bad.sum())
+					logger.info("%s: Đã xóa các dòng %s do sai dtype", col, bad_rows)
 				else:
 					df[col] = converted
 
@@ -287,9 +356,16 @@ class DataPreprocessor:
 			if n_invalid == 0:
 				continue
 
-			logger.info("%s: %s dòng vi phạm miền giá trị", col, n_invalid)
 			if action == "drop":
+				violating_rows = df.index[mask_invalid].tolist()
 				df = df.loc[~mask_invalid]
+				logger.info(
+					"%s: Đã xóa các dòng %s vì vi phạm miền giá trị [%s, %s]",
+					col,
+					violating_rows,
+					min_val,
+					max_val,
+				)
 			elif action == "clip":
 				df[col] = df[col].clip(lower=min_val, upper=max_val)
 			elif action == "mean":
@@ -495,6 +571,11 @@ class DataPreprocessor:
 			self.scaler_rules.update(scaler_rules)
 
 		df = self.data
+		logger.info(
+			"⚙️  SCALE FEATURES | Tổng cột số: %s | Có rule riêng: %s",
+			len(num_cols),
+			len(self.scaler_rules),
+		)
 		scaled_cols = set()
 		for col, method in self.scaler_rules.items():
 			if col not in num_cols:
@@ -511,9 +592,15 @@ class DataPreprocessor:
 					continue
 				df[[col]] = scaler.transform(df[[col]])
 			scaled_cols.add(col)
+			logger.info("   • %s: dùng scaler %s", col, scaler.__class__.__name__)
 
 		remaining_cols = [col for col in num_cols if col not in scaled_cols]
 		if self.default_scaler and remaining_cols:
+			logger.info(
+				"   • %s cột còn lại dùng scaler mặc định %s",
+				len(remaining_cols),
+				self.default_scaler.__class__.__name__,
+			)
 			for col in remaining_cols:
 				if fit:
 					scaler = clone(self.default_scaler)
@@ -526,8 +613,7 @@ class DataPreprocessor:
 					df[[col]] = scaler.transform(df[[col]])
 
 		self.data = df
-		if fit:
-			self.preprocessing_steps.append("scale")
+
 		return self
 
 	def scale_features(
@@ -562,6 +648,11 @@ class DataPreprocessor:
 			self.encoder_rules.update(encoder_rules)
 
 		df = self.data
+		logger.info(
+			"🧩 ENCODING FEATURES | Tổng cột phân loại: %s | Rule riêng: %s",
+			len(cat_cols),
+			len(self.encoder_rules),
+		)
 		onehot_frames = []
 		cols_to_drop: List[str] = []
 
@@ -577,53 +668,17 @@ class DataPreprocessor:
 
 			try:
 				if method == "label":
-					encoder = self.encoders.get(col) if not fit else LabelEncoder()
-					if fit:
-						df[col] = encoder.fit_transform(df[col].astype(str))
-						self.encoders[col] = encoder
-					elif encoder:
-						df[col] = encoder.transform(df[col].astype(str))
-				elif method == "ordinal":
-					encoder = self.encoders.get(col) if not fit else OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
-					if fit:
-						df[[col]] = encoder.fit_transform(df[[col]].astype(str))
-						self.encoders[col] = encoder
-					elif encoder:
-						df[[col]] = encoder.transform(df[[col]].astype(str))
-				elif method == "onehot":
-					encoder = self.encoders.get(col) if not fit else OneHotEncoder(sparse_output=False, handle_unknown="ignore", dtype=int)
-					if encoder is None:
-						continue
-					if fit:
-						matrix = encoder.fit_transform(df[[col]].astype(str))
-						cols = encoder.get_feature_names_out([col])
-						temp_df = pd.DataFrame(matrix, columns=cols, index=df.index)
-						if self._onehot_drop_first and temp_df.shape[1] > 1:
-							temp_df = temp_df.iloc[:, 1:]
-						self.onehot_feature_names[col] = temp_df.columns.tolist()
-						onehot_frames.append(temp_df)
-						cols_to_drop.append(col)
-						self.encoders[col] = encoder
-					else:
-						matrix = encoder.transform(df[[col]].astype(str))
-						cols = encoder.get_feature_names_out([col])
-						temp_df = pd.DataFrame(matrix, columns=cols, index=df.index)
-						if self._onehot_drop_first and temp_df.shape[1] > 1:
-							temp_df = temp_df.iloc[:, 1:]
-						saved_cols = self.onehot_feature_names.get(col, temp_df.columns.tolist())
-						temp_df = temp_df.reindex(columns=saved_cols, fill_value=0)
-						onehot_frames.append(temp_df)
-						cols_to_drop.append(col)
+
 			except Exception as exc:
 				self._log("encode_error", f"{col}: {exc}")
 
 		if onehot_frames:
 			df = pd.concat([df] + onehot_frames, axis=1)
 			df.drop(columns=cols_to_drop, inplace=True)
+			logger.info("   • Tổng cột one-hot mới: %s", sum(frame.shape[1] for frame in onehot_frames))
 
 		self.data = df
-		if fit:
-			self.preprocessing_steps.append("encode")
+
 		return self
 
 	def encode_categorical(
@@ -789,10 +844,19 @@ class DataPreprocessor:
 	# ------------------------------------------------------------------
 	# Pipeline orchestration
 	# ------------------------------------------------------------------
-	def run(self, target_col: Optional[str] = None) -> "DataPreprocessor":
+	def run(self, target_col: Optional[str] = None, perform_eda: bool = True) -> "DataPreprocessor":
 		logger.info("%s", "#" * 70)
-		logger.info("BẮT ĐẦU DATA PIPELINE")
+		logger.info("🚀 BẮT ĐẦU DATA PIPELINE")
 		logger.info("%s", "#" * 70)
+
+		# --- BƯỚC 1: PRE-EDA (Khám phá dữ liệu thô) ---
+		if perform_eda:
+			logger.info("📊 Đang tạo báo cáo EDA dữ liệu thô (Pre-processing)...")
+			self.print_summary()
+			self.visualizer.output_dir = Path(EDA_RESULTS_DIR) / "raw"
+			self.generate_eda_report(target_col=target_col)
+
+		# --- BƯỚC 2: XỬ LÝ DỮ LIỆU (PIPELINE) ---
 		self.detect_types()
 		self.apply_constraints()
 		self.fill_missing()
@@ -801,7 +865,16 @@ class DataPreprocessor:
 		self.handle_outliers()
 		self.scale()
 		self.encode()
-		logger.info("PIPELINE HOÀN TẤT - Steps: %s", self.preprocessing_steps)
+
+		# --- BƯỚC 3: POST-EDA (Kiểm tra lại dữ liệu sạch) ---
+		if perform_eda:
+			logger.info("📊 Đang tạo báo cáo EDA dữ liệu sạch (Post-processing)...")
+			self._update_visualizer()
+			self.visualizer.output_dir = Path(EDA_RESULTS_DIR) / "processed"
+			self.plot_correlation_heatmap(target_col=target_col, annot=False)
+			self.print_summary()
+
+		logger.info("✅ PIPELINE HOÀN TẤT - Steps: %s", self.preprocessing_steps)
 		return self
 
 	# ------------------------------------------------------------------

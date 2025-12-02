@@ -263,7 +263,8 @@ Script này sẽ:
 | Method                          | Mô tả                                                                   |
 | ------------------------------- | ----------------------------------------------------------------------- |
 | `load_data()`                   | Đọc dữ liệu từ CSV, Excel, JSON                                         |
-| `check_missing()`               | Kiểm tra missing values                                                 |
+| `eda_overview()`                | Báo cáo tổng quan (shape, missing %, skew, rare categories, correlations) |
+| `apply_constraints()`           | Áp dụng ràng buộc kiểu/miền giá trị dựa trên `config.CONSTRAINT_RULES`  |
 | `handle_missing()`              | Xử lý missing values (mean, median, mode, forward-fill)                 |
 | `detect_outliers_*()`           | Phát hiện outliers (IQR, Z-score, Isolation Forest)                     |
 | `remove_outliers()`             | Loại bỏ outliers                                                        |
@@ -272,6 +273,8 @@ Script này sẽ:
 | `create_datetime_features()`    | Tạo features từ datetime                                                |
 | `create_interaction_features()` | Tạo interaction features                                                |
 | `save_data()`                   | Lưu dữ liệu đã xử lý                                                    |
+
+> 📌 **Cấu hình ràng buộc**: sửa `config.CONSTRAINT_RULES` để quy định dtype, min/max và hành động (clip/drop/mean) cho từng cột. `main.py` sẽ tự động gán các rule này cho `DataPreprocessor.apply_constraints()` trước khi xử lý missing/outlier.
 
 **Ví dụ sử dụng:**
 

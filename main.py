@@ -133,17 +133,11 @@ def download_data():
 
 
 
-def preprocess_data(generate_viz: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, Optional[List[str]], DataPreprocessor]:
-    """Tiền xử lý dữ liệu với train/test split trước khi fit scaler/encoder."""
-    log_section("BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU", icon="🧹")
     
     preprocessor = DataPreprocessor()
     log_step("Đang nạp dữ liệu gốc", icon="📥")
     preprocessor.load(str(config.DATA_FILE))
-    log_step(f"Dữ liệu gốc: {preprocessor.data.shape}", icon="📦")
 
-    missing_df = preprocessor.check_missing()
-    if len(missing_df) > 0:
         print("\n⚠️  Missing Values:")
         print(missing_df.to_string(index=False))
 
@@ -151,25 +145,7 @@ def preprocess_data(generate_viz: bool = True) -> Tuple[pd.DataFrame, pd.DataFra
         log_step("Đang tạo các biểu đồ EDA (lưu tại results/eda)", icon="🖼️")
         preprocessor.generate_eda_report(target_col=config.TARGET_COLUMN)
 
-    log_step("Chuẩn hóa dữ liệu trước khi split", icon="🧽")
-    preprocessor.apply_constraints()
-    preprocessor.unify_values()
-    preprocessor.feature_engineering()
-    base_clean_df = preprocessor.get_processed_data()
-    log_step(f"Dữ liệu sạch (pre-split): {base_clean_df.shape}", icon="📏")
 
-    train_df, test_df = train_test_split(
-        base_clean_df,
-        test_size=config.TEST_SIZE,
-        random_state=config.RANDOM_SEED,
-    )
-    log_step(f"Split dữ liệu -> Train: {train_df.shape}, Test: {test_df.shape}", icon="🔀")
-
-    train_preprocessor = DataPreprocessor(train_df)
-    train_preprocessor.apply_constraints()
-    train_preprocessor.unify_values()
-    train_preprocessor.feature_engineering()
-    train_preprocessor.handle_missing(
         strategy='auto',
         numeric_strategy=config.MISSING_STRATEGY['numeric'],
         categorical_strategy=config.MISSING_STRATEGY['categorical']
