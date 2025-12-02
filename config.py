@@ -34,7 +34,8 @@ NUMERIC_COLS = [
     'Base_Fare',
     'Per_Km_Rate',
     'Per_Minute_Rate',
-    'Trip_Duration_Minutes'
+    'Trip_Duration_Minutes',
+    'Speed_kmh'
 ]
 
 # Cột phân loại
@@ -49,6 +50,72 @@ CATEGORICAL_COLS = [
 MISSING_STRATEGY = {
     'numeric': 'median',      # 'mean', 'median', 'mode'
     'categorical': 'mode'     # 'mode', 'constant'
+}
+
+# Cấu hình tạo feature tốc độ (km/h)
+SPEED_FEATURE = {
+    'enabled': True,
+    'name': 'Speed_kmh',
+    'distance_col': 'Trip_Distance_km',
+    'duration_col': 'Trip_Duration_Minutes',
+    'min_duration_minutes': 1.0,  # tránh chia cho 0
+    'round_digits': 2
+}
+
+# Quy tắc ràng buộc dữ liệu (type, miền giá trị, hành động)
+CONSTRAINT_RULES = {
+    # 1. Trip distance: enforce 0-140 km window
+    "Trip_Distance_km": {
+        "min": 0.0,
+        "max": 140.0,
+        "dtype": "float",
+        "action": "clip",
+    },
+    # 2. Passenger count must be an integer between 1-6
+    "Passenger_Count": {
+        "min": 1,
+        "max": 6,
+        "dtype": "int",
+        "action": "clip",
+    },
+    # 3. Trip duration constrained to 0-120 minutes
+    "Trip_Duration_Minutes": {
+        "min": 0.0,
+        "max": 120.0,
+        "dtype": "float",
+        "action": "clip",
+    },
+    # 4. Base fare cannot be negative; convert violations to NaN for imputation
+    "Base_Fare": {
+        "min": 0.0,
+        "dtype": "float",
+        "action": "mean",
+    },
+    # 5. Distance-based rate must be non-negative
+    "Per_Km_Rate": {
+        "min": 0.0,
+        "dtype": "float",
+        "action": "mean",
+    },
+    # 6. Time-based rate must be non-negative
+    "Per_Minute_Rate": {
+        "min": 0.0,
+        "dtype": "float",
+        "action": "mean",
+    },
+    # 7. Target price cannot be negative; drop invalid rows to avoid corrupt training
+    "Trip_Price": {
+        "min": 0.0,
+        "dtype": "float",
+        "action": "drop",
+    },
+    # 8. Vận tốc trung bình (km/h)
+    "Speed_kmh": {
+        "min": 0.0,
+        "max": 160.0,
+        "dtype": "float",
+        "action": "clip",
+    },
 }
 
 # Phương pháp encoding

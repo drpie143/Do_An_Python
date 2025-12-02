@@ -71,6 +71,69 @@ def download_data():
         sys.exit(1)
 
 
+def add_speed_feature(preprocessor: DataPreprocessor) -> None:
+    """Tạo feature tốc độ trung bình (km/h) dựa trên cấu hình SPEED_FEATURE."""
+    settings = getattr(config, "SPEED_FEATURE", {}) or {}
+    if not settings.get("enabled", False):
+        logger.info("⏩ Bỏ qua tạo Speed_kmh vì SPEED_FEATURE.disabled")
+        return
+
+    distance_col = settings.get("distance_col", "Trip_Distance_km")
+    duration_col = settings.get("duration_col", "Trip_Duration_Minutes")
+    feature_name = settings.get("name", "Speed_kmh")
+    min_duration = max(float(settings.get("min_duration_minutes", 1.0)), 1e-6)
+    round_digits = settings.get("round_digits")
+
+    df = preprocessor.data
+    if df is None:
+        raise ValueError("Chưa có dữ liệu để tạo feature tốc độ")
+    missing_cols = [col for col in (distance_col, duration_col) if col not in df.columns]
+    if missing_cols:
+        logger.warning("⚠️  Không thể tạo %s vì thiếu cột: %s", feature_name, missing_cols)
+        return
+
+    logger.info(
+        "🚗 Đang tạo feature %s = %s / (%s / 60) với ngưỡng %.2f phút",
+        feature_name,
+        distance_col,
+        duration_col,
+        min_duration,
+    )
+
+    distance_series = pd.to_numeric(df[distance_col], errors="coerce")
+    duration_series = pd.to_numeric(df[duration_col], errors="coerce")
+    invalid_duration_mask = duration_series < min_duration
+    if invalid_duration_mask.any():
+        logger.warning(
+            "⚠️  %s dòng có %s < %.2f phút -> dùng ngưỡng tối thiểu để tránh chia cho 0",
+            int(invalid_duration_mask.sum()),
+            duration_col,
+            min_duration,
+        )
+        duration_series = duration_series.clip(lower=min_duration)
+
+    speed_series = distance_series / (duration_series / 60.0)
+    if isinstance(round_digits, int):
+        speed_series = speed_series.round(round_digits)
+
+    df[feature_name] = speed_series
+    if preprocessor.original_data is not None:
+        preprocessor.original_data[feature_name] = speed_series
+    preprocessor.data = df
+    preprocessor.detect_types()
+    preprocessor._update_visualizer()
+
+    stats = speed_series.describe()
+    logger.info(
+        "✅ %s đã tạo xong | min=%.2f | max=%.2f | mean=%.2f | non-null=%s",
+        feature_name,
+        stats.get("min", float("nan")),
+        stats.get("max", float("nan")),
+        stats.get("mean", float("nan")),
+        int(speed_series.notna().sum()),
+    )
+
+
 def preprocess_data(generate_viz: bool = True) -> Tuple[pd.DataFrame, Optional[List[str]]]:
     """Tiền xử lý dữ liệu và trả về danh sách feature có tương quan cao với target."""
     logger.info("\n" + "="*70)
@@ -80,18 +143,35 @@ def preprocess_data(generate_viz: bool = True) -> Tuple[pd.DataFrame, Optional[L
     # Khởi tạo preprocessor và load data
     preprocessor = DataPreprocessor()
     preprocessor.load(str(config.DATA_FILE))
+    add_speed_feature(preprocessor)
+    if getattr(config, "CONSTRAINT_RULES", None):
+        preprocessor.constraint_rules = config.CONSTRAINT_RULES.copy()
     
     logger.info(f"Dữ liệu gốc: {preprocessor.data.shape}")
     
-    # Kiểm tra missing values
-    missing_df = preprocessor.check_missing()
-    if len(missing_df) > 0:
+    # Tạo báo cáo tổng quan nhanh để log các cảnh báo EDA
+    logger.info("\n🧾 Đang chạy EDA overview...")
+    overview = preprocessor.eda_overview(top_n=5)
+
+    missing_df = None
+    if overview and isinstance(overview.get("column_profile"), pd.DataFrame):
+        column_profile = overview["column_profile"]
+        missing_df = (
+            column_profile[column_profile["missing"] > 0]
+            .reset_index()
+            .rename(columns={"index": "Column", "missing": "Missing_Count", "missing_pct": "Missing_Percent"})
+        )
+    if missing_df is not None and not missing_df.empty:
         print("\n⚠️  Missing Values:")
         print(missing_df.to_string(index=False))
 
     if generate_viz:
         logger.info("\n🖼️  Đang tạo các biểu đồ EDA (tự động lưu tại results/eda)...")
         preprocessor.generate_eda_report(target_col=config.TARGET_COLUMN)
+
+    # Áp dụng ràng buộc dữ liệu trước khi xử lý sâu hơn
+    if preprocessor.constraint_rules:
+        preprocessor.apply_constraints()
     
     # Xử lý missing values
     preprocessor.handle_missing(
