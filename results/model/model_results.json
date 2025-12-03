@@ -16,9 +16,9 @@
     },
     "random_forest": {
         "train_rmse": 5.186374255477652,
-        "test_rmse": 10.535062828828766,
-        "test_mae": 6.260535276078889,
-        "test_r2": 0.9183207974400555,
+        "test_rmse": 10.535062828828767,
+        "test_mae": 6.260535276078888,
+        "test_r2": 0.9183207974400553,
         "hyperparams": {
             "n_estimators": 126,
             "max_depth": 13,

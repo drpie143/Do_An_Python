@@ -1,207 +1,207 @@
-2025-12-02 20:18:16 | INFO     | __main__ | 
+2025-12-03 08:41:24 | INFO     | __main__ | 
 
-2025-12-02 20:18:16 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:16 | INFO     | __main__ | 🚀 BẮT ĐẦU PIPELINE DỰ ĐOÁN GIÁ TAXI
-2025-12-02 20:18:16 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:16 | INFO     | __main__ | 
-2025-12-02 20:18:16 | INFO     | __main__ | ✅ Dữ liệu đã tồn tại: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\data\taxi_price.csv
-2025-12-02 20:18:16 | INFO     | __main__ | 
+2025-12-03 08:41:24 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:24 | INFO     | __main__ | 🚀 BẮT ĐẦU PIPELINE DỰ ĐOÁN GIÁ TAXI
+2025-12-03 08:41:24 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:24 | INFO     | __main__ | 
+2025-12-03 08:41:24 | INFO     | __main__ | ✅ Dữ liệu đã tồn tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\data\taxi_price.csv
+2025-12-03 08:41:24 | INFO     | __main__ | 
 
-2025-12-02 20:18:16 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:16 | INFO     | __main__ | 🧹 BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU
-2025-12-02 20:18:16 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:16 | INFO     | __main__ | 
-2025-12-02 20:18:16 | INFO     | __main__ | 📥 Đang nạp dữ liệu gốc
-2025-12-02 20:18:17 | INFO     | src.preprocessing.data_preprocessor | ✅ Đọc dữ liệu thành công từ E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\data\taxi_price.csv - Shape: (1000, 11)
-2025-12-02 20:18:17 | INFO     | __main__ | 📦 Dữ liệu gốc: (1000, 11)
-2025-12-02 20:18:17 | INFO     | src.preprocessing.data_preprocessor | ⚠️  Phát hiện 11 cột có missing values
-2025-12-02 20:18:17 | INFO     | __main__ | 🖼️ Đang tạo các biểu đồ EDA (lưu tại results/eda)
-2025-12-02 20:18:17 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\missing_heatmap_2.png
-2025-12-02 20:18:17 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Trip_Distance_km_2.png
-2025-12-02 20:18:18 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Passenger_Count_2.png
-2025-12-02 20:18:18 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Base_Fare_2.png
-2025-12-02 20:18:19 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Per_Km_Rate_2.png
-2025-12-02 20:18:19 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Per_Minute_Rate_2.png
-2025-12-02 20:18:19 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\numeric_Trip_Duration_Minutes_2.png
-2025-12-02 20:18:20 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\categorical_Time_of_Day_2.png
-2025-12-02 20:18:20 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\categorical_Day_of_Week_2.png
-2025-12-02 20:18:20 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\categorical_Traffic_Conditions_2.png
-2025-12-02 20:18:20 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\categorical_Weather_2.png
-2025-12-02 20:18:20 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\correlation_spearman_2.png
-2025-12-02 20:18:21 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Trip_Distance_km_vs_Trip_Price_2.png
-2025-12-02 20:18:21 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Passenger_Count_vs_Trip_Price_2.png
-2025-12-02 20:18:21 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Base_Fare_vs_Trip_Price_2.png
-2025-12-02 20:18:22 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Per_Km_Rate_vs_Trip_Price_2.png
-2025-12-02 20:18:22 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Per_Minute_Rate_vs_Trip_Price_2.png
-2025-12-02 20:18:22 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Trip_Duration_Minutes_vs_Trip_Price_2.png
-2025-12-02 20:18:23 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Time_of_Day_vs_Trip_Price_2.png
-2025-12-02 20:18:23 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Day_of_Week_vs_Trip_Price_2.png
-2025-12-02 20:18:23 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Traffic_Conditions_vs_Trip_Price_2.png
-2025-12-02 20:18:23 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\relationship_Weather_vs_Trip_Price_2.png
-2025-12-02 20:18:23 | INFO     | __main__ | 🧽 Chuẩn hóa dữ liệu trước khi split
-2025-12-02 20:18:23 | INFO     | src.preprocessing.data_preprocessor | Speed_kmh: Drop 50 dòng ngoài miền
-2025-12-02 20:18:23 | INFO     | __main__ | 📏 Dữ liệu sạch (pre-split): (950, 12)
-2025-12-02 20:18:23 | INFO     | __main__ | 🔀 Split dữ liệu -> Train: (760, 12), Test: (190, 12)
-2025-12-02 20:18:23 | INFO     | src.preprocessing.data_preprocessor | ✅ DataPreprocessor khởi tạo thành công - Shape: (760, 12)
-2025-12-02 20:18:23 | INFO     | __main__ | 📏 Chuẩn hóa features (dựa trên train set)
-2025-12-02 20:18:24 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\correlation_heatmap_train.png
-2025-12-02 20:18:24 | INFO     | __main__ | 📌 Heatmap tương quan (train) đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\eda\correlation_heatmap_train.png
-2025-12-02 20:18:24 | INFO     | __main__ | 🎯 3 feature có |corr| >= 0.3: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
-2025-12-02 20:18:24 | INFO     | src.preprocessing.data_preprocessor | ======================================================================
-2025-12-02 20:18:24 | INFO     | src.preprocessing.data_preprocessor | 📊 TÓM TẮT DỮ LIỆU
-2025-12-02 20:18:24 | INFO     | src.preprocessing.data_preprocessor | {'shape': (760, 20), 'n_numeric_cols': 20, 'n_categorical_cols': 0, 'total_missing': 0, 'preprocessing_steps': ['unify_values', 'feature_engineering', 'fill_missing', 'encode', 'scale'], 'memory_usage_mb': 0.11609268188476562}
-2025-12-02 20:18:24 | INFO     | src.preprocessing.data_preprocessor | ======================================================================
-2025-12-02 20:18:24 | INFO     | __main__ | 
+2025-12-03 08:41:24 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:24 | INFO     | __main__ | 🧹 BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU
+2025-12-03 08:41:24 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:24 | INFO     | __main__ | 
+2025-12-03 08:41:24 | INFO     | __main__ | 📥 Đang nạp dữ liệu gốc
+2025-12-03 08:41:24 | INFO     | src.preprocessing.data_preprocessor | ✅ Đọc dữ liệu thành công từ E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\data\taxi_price.csv - Shape: (1000, 11)
+2025-12-03 08:41:24 | INFO     | __main__ | 📦 Dữ liệu gốc: (1000, 11)
+2025-12-03 08:41:24 | INFO     | src.preprocessing.data_preprocessor | ⚠️  Phát hiện 11 cột có missing values
+2025-12-03 08:41:24 | INFO     | __main__ | 🖼️ Đang tạo các biểu đồ EDA (lưu tại results/eda)
+2025-12-03 08:41:24 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\missing_heatmap.png
+2025-12-03 08:41:25 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Trip_Distance_km.png
+2025-12-03 08:41:25 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Passenger_Count.png
+2025-12-03 08:41:25 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Base_Fare.png
+2025-12-03 08:41:26 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Per_Km_Rate.png
+2025-12-03 08:41:26 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Per_Minute_Rate.png
+2025-12-03 08:41:27 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\numeric_Trip_Duration_Minutes.png
+2025-12-03 08:41:27 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\categorical_Time_of_Day.png
+2025-12-03 08:41:27 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\categorical_Day_of_Week.png
+2025-12-03 08:41:27 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\categorical_Traffic_Conditions.png
+2025-12-03 08:41:27 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\categorical_Weather.png
+2025-12-03 08:41:28 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\correlation_spearman.png
+2025-12-03 08:41:28 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Trip_Distance_km_vs_Trip_Price.png
+2025-12-03 08:41:28 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Passenger_Count_vs_Trip_Price.png
+2025-12-03 08:41:29 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Base_Fare_vs_Trip_Price.png
+2025-12-03 08:41:29 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Per_Km_Rate_vs_Trip_Price.png
+2025-12-03 08:41:29 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Per_Minute_Rate_vs_Trip_Price.png
+2025-12-03 08:41:30 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Trip_Duration_Minutes_vs_Trip_Price.png
+2025-12-03 08:41:30 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Time_of_Day_vs_Trip_Price.png
+2025-12-03 08:41:30 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Day_of_Week_vs_Trip_Price.png
+2025-12-03 08:41:30 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Traffic_Conditions_vs_Trip_Price.png
+2025-12-03 08:41:31 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\relationship_Weather_vs_Trip_Price.png
+2025-12-03 08:41:31 | INFO     | __main__ | 🧽 Chuẩn hóa dữ liệu trước khi split
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | Speed_kmh: Drop 50 dòng ngoài miền
+2025-12-03 08:41:31 | INFO     | __main__ | 📏 Dữ liệu sạch (pre-split): (950, 12)
+2025-12-03 08:41:31 | INFO     | __main__ | 🔀 Split dữ liệu -> Train: (760, 12), Test: (190, 12)
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | ✅ DataPreprocessor khởi tạo thành công - Shape: (760, 12)
+2025-12-03 08:41:31 | INFO     | __main__ | 📏 Chuẩn hóa features (dựa trên train set)
+2025-12-03 08:41:31 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\correlation_heatmap_train.png
+2025-12-03 08:41:31 | INFO     | __main__ | 📌 Heatmap tương quan (train) đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\eda\correlation_heatmap_train.png
+2025-12-03 08:41:31 | INFO     | __main__ | 🎯 3 feature có |corr| >= 0.3: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | ======================================================================
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | 📊 TÓM TẮT DỮ LIỆU
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | {'shape': (760, 20), 'n_numeric_cols': 20, 'n_categorical_cols': 0, 'total_missing': 0, 'preprocessing_steps': ['unify_values', 'feature_engineering', 'fill_missing', 'encode', 'scale'], 'memory_usage_mb': 0.11609268188476562}
+2025-12-03 08:41:31 | INFO     | src.preprocessing.data_preprocessor | ======================================================================
+2025-12-03 08:41:31 | INFO     | __main__ | 
 
-2025-12-02 20:18:24 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:24 | INFO     | __main__ | 🤖 BƯỚC 2: HUẤN LUYỆN MÔ HÌNH
-2025-12-02 20:18:24 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:24 | INFO     | __main__ | 
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:31 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:31 | INFO     | __main__ | 🤖 BƯỚC 2: HUẤN LUYỆN MÔ HÌNH
+2025-12-03 08:41:31 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:31 | INFO     | __main__ | 
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | ⚙️ MODELTRAINER KHỞI TẠO
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | ✅ Khởi tạo thành công
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | 📊 Train: (760, 19), Test: (190, 19)
-2025-12-02 20:18:24 | INFO     | __main__ | 📊 Data info: {'train_shape': (760, 19), 'test_shape': (190, 19), 'n_features': 19, 'n_samples_train': 760, 'n_samples_test': 190}
-2025-12-02 20:18:24 | INFO     | __main__ | 🔍 Tối ưu Polynomial Regression
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | ⚙️ MODELTRAINER KHỞI TẠO
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | ✅ Khởi tạo thành công
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | 📊 Train: (760, 19), Test: (190, 19)
+2025-12-03 08:41:31 | INFO     | __main__ | 📊 Data info: {'train_shape': (760, 19), 'test_shape': (190, 19), 'n_features': 19, 'n_samples_train': 760, 'n_samples_test': 190}
+2025-12-03 08:41:31 | INFO     | __main__ | 🔍 Tối ưu Polynomial Regression
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU POLYNOMIAL REGRESSION
-2025-12-02 20:18:24 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | ✅ Best params: {'degree': 2, 'alpha': 7.579479953348009}
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer |    Best RMSE   : 15.388469
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU POLYNOMIAL REGRESSION
+2025-12-03 08:41:31 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | ✅ Best params: {'degree': 2, 'alpha': 7.579479953348009}
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer |    Best RMSE   : 15.388469
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 📊 TRAINING POLYNOMIAL REGRESSION
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 🔸 degree=2, alpha=7.579479953348009
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 📌 Sử dụng 3 feature có |corr| >= threshold
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 🧮 Features: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 📊 Original features: 19
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 🧱 Polynomial features: 9
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer |    Train RMSE  : 12.935833
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer |    Test RMSE   : 14.335389
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer |    Test MAE    : 9.179075
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer |    Test R²     : 0.848764
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.01 giây
-2025-12-02 20:18:30 | INFO     | __main__ | 🔍 Tối ưu Random Forest
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 📊 TRAINING POLYNOMIAL REGRESSION
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 🔸 degree=2, alpha=7.579479953348009
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 📌 Sử dụng 3 feature có |corr| >= threshold
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 🧮 Features: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 📊 Original features: 19
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 🧱 Polynomial features: 9
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer |    Train RMSE  : 12.935833
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer |    Test RMSE   : 14.335389
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer |    Test MAE    : 9.179075
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer |    Test R²     : 0.848764
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.01 giây
+2025-12-03 08:41:37 | INFO     | __main__ | 🔍 Tối ưu Random Forest
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU RANDOM FOREST
-2025-12-02 20:18:30 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | ✅ Best params: {'n_estimators': 126, 'max_depth': 13, 'min_samples_split': 5, 'min_samples_leaf': 2}
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer |    Best RMSE   : 10.549756
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU RANDOM FOREST
+2025-12-03 08:41:37 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | ✅ Best params: {'n_estimators': 126, 'max_depth': 13, 'min_samples_split': 5, 'min_samples_leaf': 2}
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer |    Best RMSE   : 10.549756
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | 🌲 TRAINING RANDOM FOREST
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | 🔸 n_estimators=126, max_depth=13
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer |    Train RMSE  : 5.186374
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer |    Test RMSE   : 10.535063
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer |    Test MAE    : 6.260535
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer |    Test R²     : 0.918321
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.18 giây
-2025-12-02 20:18:35 | INFO     | __main__ | 🔍 Tối ưu XGBoost
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | 🌲 TRAINING RANDOM FOREST
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | 🔸 n_estimators=126, max_depth=13
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer |    Train RMSE  : 5.186374
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer |    Test RMSE   : 10.535063
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer |    Test MAE    : 6.260535
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer |    Test R²     : 0.918321
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.18 giây
+2025-12-03 08:41:42 | INFO     | __main__ | 🔍 Tối ưu XGBoost
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU XGBOOST
-2025-12-02 20:18:35 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ✅ Best params: {'max_depth': 6, 'learning_rate': 0.02744396611386889, 'n_estimators': 276, 'subsample': 0.5018837812007404, 'colsample_bytree': 0.963795805996671, 'min_child_weight': 5, 'lambda': 0.2658107269839162, 'alpha': 0.6087896414470731}
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Best RMSE   : 11.246927
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | 🔍 TỐI ƯU XGBOOST
+2025-12-03 08:41:42 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ✅ Best params: {'max_depth': 6, 'learning_rate': 0.02744396611386889, 'n_estimators': 276, 'subsample': 0.5018837812007404, 'colsample_bytree': 0.963795805996671, 'min_child_weight': 5, 'lambda': 0.2658107269839162, 'alpha': 0.6087896414470731}
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Best RMSE   : 11.246927
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ⚡ TRAINING XGBOOST
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Train RMSE  : 6.693591
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test RMSE   : 11.000621
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test MAE    : 5.479605
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test R²     : 0.910942
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.20 giây
-2025-12-02 20:18:42 | INFO     | __main__ | 
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ⚡ TRAINING XGBOOST
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Train RMSE  : 6.693591
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test RMSE   : 11.000621
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test MAE    : 5.479605
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test R²     : 0.910942
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ⏱️ Thời gian train: 0.20 giây
+2025-12-03 08:41:49 | INFO     | __main__ | 
 
-2025-12-02 20:18:42 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:42 | INFO     | __main__ | 📊 BƯỚC 3: ĐÁNH GIÁ & VISUALIZATION
-2025-12-02 20:18:42 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:42 | INFO     | __main__ | 
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:49 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:49 | INFO     | __main__ | 📊 BƯỚC 3: ĐÁNH GIÁ & VISUALIZATION
+2025-12-03 08:41:49 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:49 | INFO     | __main__ | 
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 📊 TÓM TẮT KẾT QUẢ TRAINING
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 📊 TÓM TẮT KẾT QUẢ TRAINING
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ✨ MÔ HÌNH TỐT NHẤT
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 🏆 Model: RANDOM_FOREST
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test R²     : 0.918321
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test RMSE   : 10.535063
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer |    Test MAE    : 6.260535
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ✨ MÔ HÌNH TỐT NHẤT
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 🏆 Model: RANDOM_FOREST
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test R²     : 0.918321
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test RMSE   : 10.535063
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer |    Test MAE    : 6.260535
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ======================================================================
 
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 💾 Đã lưu kết quả: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\model_results.json
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 💾 Đã lưu kết quả: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\model_results.json
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 💾 LƯU TẤT CẢ CÁC MÔ HÌNH
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\models\polynomial_20251202_201842.joblib
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\models\random_forest_20251202_201842.joblib
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\models\xgboost_20251202_201842.joblib
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ✅ Hoàn tất lưu 3 mô hình!
-2025-12-02 20:18:42 | INFO     | src.preprocessing.data_preprocessor | ✅ Đã lưu cấu hình tiền xử lý tại E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\models\data_preprocessor_20251202_201842.joblib
-2025-12-02 20:18:42 | INFO     | __main__ | ✅ Đã lưu pipeline metadata: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\pipeline_state.json
-2025-12-02 20:18:42 | INFO     | __main__ | 📈 Vẽ biểu đồ so sánh
-2025-12-02 20:18:42 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\comparison_test_r2.png
-2025-12-02 20:18:42 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\comparison_test_rmse.png
-2025-12-02 20:18:42 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\comparison_test_mae.png
-2025-12-02 20:18:42 | INFO     | __main__ | 📈 Vẽ biểu đồ predictions
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 💾 LƯU TẤT CẢ CÁC MÔ HÌNH
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\models\polynomial_20251203_084149.joblib
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\models\random_forest_20251203_084149.joblib
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | 💾 Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\models\xgboost_20251203_084149.joblib
+2025-12-03 08:41:49 | INFO     | src.modeling.model_trainer | ✅ Hoàn tất lưu 3 mô hình!
+2025-12-03 08:41:49 | INFO     | src.preprocessing.data_preprocessor | ✅ Đã lưu cấu hình tiền xử lý tại E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\models\data_preprocessor_20251203_084149.joblib
+2025-12-03 08:41:49 | INFO     | __main__ | ✅ Đã lưu pipeline metadata: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\pipeline_state.json
+2025-12-03 08:41:49 | INFO     | __main__ | 📈 Vẽ biểu đồ so sánh
+2025-12-03 08:41:49 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\comparison_test_r2.png
+2025-12-03 08:41:49 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\comparison_test_rmse.png
+2025-12-03 08:41:50 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\comparison_test_mae.png
+2025-12-03 08:41:50 | INFO     | __main__ | 📈 Vẽ biểu đồ predictions
+2025-12-03 08:41:50 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | 📈 VẼ BIỂU ĐỒ PREDICTIONS CHO TẤT CẢ MÔ HÌNH
-2025-12-02 20:18:42 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:43 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\predictions_polynomial.png
-2025-12-02 20:18:43 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\predictions_random_forest.png
-2025-12-02 20:18:44 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\predictions_xgboost.png
-2025-12-02 20:18:44 | INFO     | __main__ | 📈 Vẽ biểu đồ feature importance
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:50 | INFO     | src.modeling.model_trainer | 📈 VẼ BIỂU ĐỒ PREDICTIONS CHO TẤT CẢ MÔ HÌNH
+2025-12-03 08:41:50 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:50 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\predictions_polynomial.png
+2025-12-03 08:41:50 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\predictions_random_forest.png
+2025-12-03 08:41:51 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\predictions_xgboost.png
+2025-12-03 08:41:51 | INFO     | __main__ | 📈 Vẽ biểu đồ feature importance
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 📊 VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | 📊 VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | 
 📊 Feature Importance - RANDOM_FOREST
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:44 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\feature_importance_random_forest.png
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:51 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\feature_importance_random_forest.png
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | 
 📊 Feature Importance - XGBOOST
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:44 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\feature_importance_xgboost.png
-2025-12-02 20:18:44 | INFO     | __main__ | 📈 So sánh feature importance
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 
+2025-12-03 08:41:51 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:52 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\feature_importance_xgboost.png
+2025-12-03 08:41:52 | INFO     | __main__ | 📈 So sánh feature importance
+2025-12-03 08:41:52 | INFO     | src.modeling.model_trainer | 
 ======================================================================
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | 📊 SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH
-2025-12-02 20:18:44 | INFO     | src.modeling.model_trainer | ======================================================================
-2025-12-02 20:18:45 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results\model\feature_importance_comparison.png
-2025-12-02 20:18:45 | INFO     | __main__ | 
+2025-12-03 08:41:52 | INFO     | src.modeling.model_trainer | 📊 SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH
+2025-12-03 08:41:52 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-03 08:41:52 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results\model\feature_importance_comparison.png
+2025-12-03 08:41:52 | INFO     | __main__ | 
 
-2025-12-02 20:18:45 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:45 | INFO     | __main__ | ✨ MÔ HÌNH TỐT NHẤT
-2025-12-02 20:18:45 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:45 | INFO     | __main__ | 
-2025-12-02 20:18:45 | INFO     | __main__ |    Model             : RANDOM_FOREST
-2025-12-02 20:18:45 | INFO     | __main__ |    Test R²           : 0.918321
-2025-12-02 20:18:45 | INFO     | __main__ |    Test RMSE         : 10.535063
-2025-12-02 20:18:45 | INFO     | __main__ |    Test MAE          : 6.260535
-2025-12-02 20:18:45 | INFO     | __main__ | 
+2025-12-03 08:41:52 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:52 | INFO     | __main__ | ✨ MÔ HÌNH TỐT NHẤT
+2025-12-03 08:41:52 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:52 | INFO     | __main__ | 
+2025-12-03 08:41:52 | INFO     | __main__ |    Model             : RANDOM_FOREST
+2025-12-03 08:41:52 | INFO     | __main__ |    Test R²           : 0.918321
+2025-12-03 08:41:52 | INFO     | __main__ |    Test RMSE         : 10.535063
+2025-12-03 08:41:52 | INFO     | __main__ |    Test MAE          : 6.260535
+2025-12-03 08:41:52 | INFO     | __main__ | 
 
-2025-12-02 20:18:45 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:45 | INFO     | __main__ | ✅ HOÀN TẤT PIPELINE
-2025-12-02 20:18:45 | INFO     | __main__ | ======================================================================
-2025-12-02 20:18:45 | INFO     | __main__ | 
-2025-12-02 20:18:45 | INFO     | __main__ | 📁 Mô hình đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\models
-2025-12-02 20:18:45 | INFO     | __main__ | 📁 Kết quả đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_ver2 - Copy - Copy\results
-2025-12-02 20:18:45 | INFO     | __main__ | 
-2025-12-02 20:18:45 | INFO     | __main__ | ⏱️ PIPELINE SUMMARY
-2025-12-02 20:18:45 | INFO     | __main__ |    Download          : 0.00 giây
-2025-12-02 20:18:45 | INFO     | __main__ |    Preprocess        : 7.33 giây
-2025-12-02 20:18:45 | INFO     | __main__ |    Train             : 17.88 giây
-2025-12-02 20:18:45 | INFO     | __main__ |    Evaluate          : 3.23 giây
-2025-12-02 20:18:45 | INFO     | __main__ |    Total             : 28.44 giây
+2025-12-03 08:41:52 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:52 | INFO     | __main__ | ✅ HOÀN TẤT PIPELINE
+2025-12-03 08:41:52 | INFO     | __main__ | ======================================================================
+2025-12-03 08:41:52 | INFO     | __main__ | 
+2025-12-03 08:41:52 | INFO     | __main__ | 📁 Mô hình đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\models
+2025-12-03 08:41:52 | INFO     | __main__ | 📁 Kết quả đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python - Copy\results
+2025-12-03 08:41:52 | INFO     | __main__ | 
+2025-12-03 08:41:52 | INFO     | __main__ | ⏱️ PIPELINE SUMMARY
+2025-12-03 08:41:52 | INFO     | __main__ |    Download          : 0.00 giây
+2025-12-03 08:41:52 | INFO     | __main__ |    Preprocess        : 7.40 giây
+2025-12-03 08:41:52 | INFO     | __main__ |    Train             : 17.71 giây
+2025-12-03 08:41:52 | INFO     | __main__ |    Evaluate          : 3.18 giây
+2025-12-03 08:41:52 | INFO     | __main__ |    Total             : 28.29 giây
