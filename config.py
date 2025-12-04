@@ -54,7 +54,7 @@ MISSING_STRATEGY = {
 
 # Cấu hình tạo feature tốc độ (km/h)
 SPEED_FEATURE = {
-    'enabled': True,
+    'enabled': False,  # TẮT để tránh tạo thêm missing values
     'name': 'Speed_kmh',
     'distance_col': 'Trip_Distance_km',
     'duration_col': 'Trip_Duration_Minutes',
@@ -138,12 +138,14 @@ RANDOM_SEED = 42
 OPTUNA_N_TRIALS = {
     'polynomial': 10,
     'random_forest': 20,
+    'extra_trees': 20,
     'xgboost': 30
 }
 
 OPTUNA_TIMEOUT = {
     'polynomial': 300,      # 5 phút
     'random_forest': 600,   # 10 phút
+    'extra_trees': 600,     # 10 phút
     'xgboost': 900          # 15 phút
 }
 
@@ -159,12 +161,22 @@ DEFAULT_HYPERPARAMS = {
         'min_samples_split': 5,
         'min_samples_leaf': 2
     },
+    'extra_trees': {
+        'n_estimators': 200,
+        'max_depth': 12,
+        'min_samples_split': 2,
+        'min_samples_leaf': 1
+    },
     'xgboost': {
-        'max_depth': 6,
-        'learning_rate': 0.1,
-        'n_estimators': 100,
-        'subsample': 0.8,
-        'colsample_bytree': 0.8
+        'max_depth': 4,
+        'learning_rate': 0.05,
+        'n_estimators': 150,
+        'subsample': 0.7,
+        'colsample_bytree': 0.7,
+        'min_child_weight': 5,
+        'gamma': 0.1,
+        'reg_lambda': 1.0,
+        'reg_alpha': 0.5
     }
 }
 

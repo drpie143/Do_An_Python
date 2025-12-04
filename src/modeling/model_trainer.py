@@ -27,7 +27,7 @@ from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
 import xgboost as xgb
@@ -381,19 +381,149 @@ class ModelTrainer:
         })
         log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
     
+    # ========== EXTRA TREES REGRESSION ==========
+    def _objective_extra_trees(self, trial: optuna.Trial) -> float:
+        """Objective function cho Extra Trees optimization."""
+        n_estimators = trial.suggest_int('n_estimators', 50, 300)
+        max_depth = trial.suggest_int('max_depth', 5, 20)
+        min_samples_split = trial.suggest_int('min_samples_split', 2, 10)
+        min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 5)
+        
+        model = ExtraTreesRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        cv_scores = cross_val_score(
+            model, self.X_train, self.y_train,
+            cv=5,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1
+        )
+        rmse = np.sqrt(-cv_scores.mean())
+        
+        return rmse
+    
+    def optimize_extra_trees(self, n_trials: int = 20, timeout: int = 600) -> Dict:
+        """
+        Tối ưu hyperparameters cho Extra Trees.
+        
+        Args:
+            n_trials: Số lần thử
+            timeout: Timeout tính bằng giây
+            
+        Returns:
+            Dictionary chứa best params
+        """
+        log_section("TỐI ƯU EXTRA TREES", icon="🔍")
+        
+        sampler = TPESampler(seed=self.RANDOM_SEED)
+        pruner = MedianPruner()
+        
+        study = optuna.create_study(
+            sampler=sampler,
+            pruner=pruner,
+            direction='minimize'
+        )
+        
+        study.optimize(
+            self._objective_extra_trees,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        best_params = study.best_params
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
+        
+        self.optimization_history['extra_trees'] = {
+            'best_params': best_params,
+            'best_value': study.best_value,
+            'n_trials': len(study.trials)
+        }
+        
+        return best_params
+    
+    def train_extra_trees(self, 
+                          n_estimators: int = 200,
+                          max_depth: int = 12,
+                          min_samples_split: int = 2,
+                          min_samples_leaf: int = 1) -> None:
+        """Huấn luyện Extra Trees (Extremely Randomized Trees)."""
+        start_time = time.perf_counter()
+        log_section("TRAINING EXTRA TREES", icon="🌳")
+        log_step(f"n_estimators={n_estimators}, max_depth={max_depth}")
+        
+        model = ExtraTreesRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        # Tree-based model KHÔNG CẦN scale
+        model.fit(self.X_train, self.y_train)
+        
+        # Đánh giá
+        y_pred_train = model.predict(self.X_train)
+        y_pred_test = model.predict(self.X_test)
+        
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
+        test_mae = mean_absolute_error(self.y_test, y_pred_test)
+        test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        # Lưu model
+        self.models['extra_trees'] = {'model': model}
+        self.results['extra_trees'] = {
+            'train_rmse': train_rmse,
+            'test_rmse': test_rmse,
+            'test_mae': test_mae,
+            'test_r2': test_r2,
+            'hyperparams': {
+                'n_estimators': n_estimators,
+                'max_depth': max_depth,
+                'min_samples_split': min_samples_split,
+                'min_samples_leaf': min_samples_leaf
+            }
+        }
+        
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
+    
     # ========== XGBOOST REGRESSION ==========
     def _objective_xgb(self, trial: optuna.Trial) -> float:
-        """Objective function cho XGBoost optimization."""
+        """Objective function cho XGBoost optimization.
+        
+        Điều chỉnh search space để giảm overfitting trên dataset nhỏ:
+        - max_depth: 2-4 (giới hạn cứng)
+        - min_child_weight: 5-15 (cao hơn để tránh overfit)
+        - Regularization mạnh
+        - Early stopping
+        """
         params = {
-            'max_depth': trial.suggest_int('max_depth', 3, 10),
+            'max_depth': trial.suggest_int('max_depth', 4, 10),
             'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
-            'n_estimators': trial.suggest_int('n_estimators', 50, 300),
-            'subsample': trial.suggest_float('subsample', 0.5, 1.0),
-            'colsample_bytree': trial.suggest_float('colsample_bytree', 0.5, 1.0),
-            'min_child_weight': trial.suggest_int('min_child_weight', 1, 5),
-            'lambda': trial.suggest_float('lambda', 0.0, 1.0),
-            'alpha': trial.suggest_float('alpha', 0.0, 1.0),
-            'random_state': self.RANDOM_SEED
+            'n_estimators': trial.suggest_int('n_estimators', 100, 500),
+            'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+            'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+            'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+            'gamma': trial.suggest_float('gamma', 0.0, 1.0),
+            'reg_lambda': trial.suggest_float('reg_lambda', 0.01, 10.0, log=True),
+            'reg_alpha': trial.suggest_float('reg_alpha', 0.0, 1.0),
+            'random_state': self.RANDOM_SEED,
         }
         
         model = xgb.XGBRegressor(**params)
@@ -452,7 +582,7 @@ class ModelTrainer:
     
     def train_xgb(self, **xgb_params) -> None:
         """
-        Huấn luyện XGBoost.
+        Huấn luyện XGBoost với early stopping để tránh overfit.
         
         Args:
             **xgb_params: XGBoost hyperparameters
@@ -460,23 +590,44 @@ class ModelTrainer:
         start_time = time.perf_counter()
         log_section("TRAINING XGBOOST", icon="⚡")
         
-        # Default params
+        # XGBoost params tối ưu - KHÔNG cần regularization mạnh vì tree-based
         default_params = {
-            'max_depth': 6,
-            'learning_rate': 0.1,
-            'n_estimators': 100,
-            'subsample': 0.8,
-            'colsample_bytree': 0.8,
-            'random_state': self.RANDOM_SEED
+            'max_depth': 6,                # Độ sâu tốt cho XGBoost
+            'learning_rate': 0.1,          # Learning rate chuẩn
+            'n_estimators': 300,           # Đủ cây để học
+            'subsample': 0.8,              # Sample đủ dữ liệu
+            'colsample_bytree': 0.8,       # Sample đủ features
+            'min_child_weight': 1,         # Mặc định
+            'gamma': 0,                    # Không cần pruning mạnh
+            'reg_lambda': 1.0,             # L2 mặc định
+            'reg_alpha': 0,                # L1 mặc định
+            'random_state': self.RANDOM_SEED,
+            'n_jobs': -1                   # Dùng tất cả CPU
         }
         
         # Update với params được truyền vào
         default_params.update(xgb_params)
         
+        # Loại bỏ early_stopping_rounds nếu có (sẽ xử lý riêng)
+        early_stopping = default_params.pop('early_stopping_rounds', None)
+        
         model = xgb.XGBRegressor(**default_params)
         
-        # Tree-based không cần scale
-        model.fit(self.X_train, self.y_train, verbose=False)
+        # Dùng early stopping với validation set (20% của train)
+        if early_stopping:
+            from sklearn.model_selection import train_test_split as tts
+            X_tr, X_val, y_tr, y_val = tts(
+                self.X_train, self.y_train, 
+                test_size=0.2, 
+                random_state=self.RANDOM_SEED
+            )
+            model.fit(
+                X_tr, y_tr,
+                eval_set=[(X_val, y_val)],
+                verbose=False
+            )
+        else:
+            model.fit(self.X_train, self.y_train, verbose=False)
         
         # Đánh giá
         y_pred_train = model.predict(self.X_train)
@@ -486,6 +637,10 @@ class ModelTrainer:
         test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
         test_mae = mean_absolute_error(self.y_test, y_pred_test)
         test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        # Log gap để theo dõi overfit
+        gap = train_rmse - test_rmse
+        log_step(f"Train-Test Gap: {abs(gap):.2f} (target < 3.0)", icon="📊")
         
         # Lưu model
         self.models['xgboost'] = {'model': model}
@@ -878,9 +1033,9 @@ class ModelTrainer:
         """
         log_section("SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH", icon="📊")
         
-        # Lấy feature importance từ các mô hình (chỉ RF và XGBoost)
+        # Lấy feature importance từ các mô hình tree-based
         importances = {}
-        for model_name in ['random_forest', 'xgboost']:
+        for model_name in ['random_forest', 'extra_trees', 'xgboost']:
             if model_name in self.models:
                 imp_df = self.get_feature_importance(model_name, top_n=top_n)
                 if imp_df is not None:

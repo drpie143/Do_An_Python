@@ -668,7 +668,45 @@ class DataPreprocessor:
 
 			try:
 				if method == "label":
-
+					if fit:
+						le = LabelEncoder()
+						df[col] = le.fit_transform(df[col].astype(str))
+						self.encoders[col] = le
+					else:
+						le = self.encoders.get(col)
+						if le is not None:
+							df[col] = df[col].astype(str).apply(
+								lambda x: le.transform([x])[0] if x in le.classes_ else -1
+							)
+					logger.info("   • %s: LabelEncoder", col)
+				elif method == "onehot":
+					if fit:
+						ohe = OneHotEncoder(sparse_output=False, handle_unknown="ignore", dtype=int, drop="first" if self._onehot_drop_first else None)
+						encoded = ohe.fit_transform(df[[col]])
+						self.encoders[col] = ohe
+						feature_names = [f"{col}_{cat}" for cat in ohe.categories_[0][1:]] if self._onehot_drop_first else [f"{col}_{cat}" for cat in ohe.categories_[0]]
+						self.onehot_feature_names[col] = feature_names
+					else:
+						ohe = self.encoders.get(col)
+						if ohe is not None:
+							encoded = ohe.transform(df[[col]])
+							feature_names = self.onehot_feature_names.get(col, [])
+						else:
+							continue
+					ohe_df = pd.DataFrame(encoded, columns=feature_names, index=df.index)
+					onehot_frames.append(ohe_df)
+					cols_to_drop.append(col)
+					logger.info("   • %s: OneHotEncoder -> %s cột mới", col, len(feature_names))
+				elif method == "ordinal":
+					if fit:
+						oe = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+						df[[col]] = oe.fit_transform(df[[col]])
+						self.encoders[col] = oe
+					else:
+						oe = self.encoders.get(col)
+						if oe is not None:
+							df[[col]] = oe.transform(df[[col]])
+					logger.info("   • %s: OrdinalEncoder", col)
 			except Exception as exc:
 				self._log("encode_error", f"{col}: {exc}")
 
