@@ -3,9 +3,9 @@ Data transformation utilities cho post-split processing.
 
 Module này xử lý các bước SAU khi chia train/test:
 - Handle missing values (fit trên train, transform trên test)
-- Remove outliers (chỉ trên train)
-- Encode categorical (fit/transform)
-- Scale features (fit/transform)
+- Remove outliers (làm trên tập train , model có thể gặp khó khăn khi áp dụng thực tế nên không xử lí trên tập test  )
+- Encode categorical (fit trên train, transform trên test)
+- Scale features (fit trên train, transform trên test)
 - Interaction features
 - fit_transform() pipeline
 - transform_new_data() cho test/inference
@@ -532,83 +532,6 @@ class DataTransformer:
 		if fit:
 			self.default_encoder = self._init_default_encoder(method)
 		return self.encode(fit=fit)
-
-	# ------------------------------------------------------------------
-	# Feature engineering (post-split)
-	# ------------------------------------------------------------------
-	def create_datetime_features(
-		self,
-		datetime_col: str,
-		features: Sequence[str] = ("hour", "day", "month", "dayofweek"),
-		drop_original: bool = False,
-	) -> "DataTransformer":
-		"""Tạo features từ cột datetime."""
-		if self.data is None or datetime_col not in self.data.columns:
-			return self
-		df = self.data
-		if not pd.api.types.is_datetime64_any_dtype(df[datetime_col]):
-			df[datetime_col] = pd.to_datetime(df[datetime_col], errors="coerce")
-		if self._capture_config:
-			config_key = (datetime_col, tuple(features), drop_original)
-			if config_key not in self._datetime_config_keys:
-				self._datetime_config_keys.add(config_key)
-				self._datetime_feature_configs.append(
-					{"datetime_col": datetime_col, "features": tuple(features), "drop_original": drop_original}
-				)
-
-		mapping = {
-			"hour": df[datetime_col].dt.hour,
-			"day": df[datetime_col].dt.day,
-			"month": df[datetime_col].dt.month,
-			"year": df[datetime_col].dt.year,
-			"dayofweek": df[datetime_col].dt.dayofweek,
-			"quarter": df[datetime_col].dt.quarter,
-		}
-		for feat in features:
-			if feat in mapping:
-				df[f"{datetime_col}_{feat}"] = mapping[feat]
-		if drop_original:
-			df.drop(columns=[datetime_col], inplace=True)
-		self.data = df
-		self.detect_types()
-		if self._capture_config:
-			self.preprocessing_steps.append("create_datetime_features")
-		return self
-
-	def create_interaction_features(
-		self,
-		col_pairs: List[Tuple[str, str]],
-		operations: Sequence[str] = ("multiply",),
-	) -> "DataTransformer":
-		"""Tạo interaction features từ các cặp cột."""
-		if self.data is None:
-			return self
-		df = self.data
-		if self._capture_config:
-			normalized_pairs = [tuple(pair) for pair in col_pairs]
-			config_key = (tuple(normalized_pairs), tuple(operations))
-			if config_key not in self._interaction_config_keys:
-				self._interaction_config_keys.add(config_key)
-				self._interaction_configs.append(
-					{"col_pairs": normalized_pairs, "operations": tuple(operations)}
-				)
-		for col1, col2 in col_pairs:
-			if col1 not in df.columns or col2 not in df.columns:
-				continue
-			for op in operations:
-				if op == "multiply":
-					df[f"{col1}_x_{col2}"] = df[col1] * df[col2]
-				elif op == "add":
-					df[f"{col1}_plus_{col2}"] = df[col1] + df[col2]
-				elif op == "subtract":
-					df[f"{col1}_minus_{col2}"] = df[col1] - df[col2]
-				elif op == "divide":
-					df[f"{col1}_div_{col2}"] = df[col1] / (df[col2] + 1e-6)
-		self.data = df
-		self.detect_types()
-		if self._capture_config:
-			self.preprocessing_steps.append("create_interaction_features")
-		return self
 
 	# ------------------------------------------------------------------
 	# Visualization bridge

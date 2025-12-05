@@ -70,9 +70,11 @@ class DataLoader:
 	# Internal helpers
 	# ------------------------------------------------------------------
 	def _update_visualizer(self) -> None:
+		"""Đồng bộ dữ liệu hiện tại cho các hàm vẽ/EDA(refresh)"""
 		self.visualizer.set_data(self.data)
 
 	def _log(self, key: str, message: str) -> None:
+		"""Lưu thông điệp debug theo từng nhóm key trong self.log."""
 		self.log.setdefault(key, []).append(message)
 
 	# ------------------------------------------------------------------
@@ -103,7 +105,7 @@ class DataLoader:
 		return df
 
 	def load(self, filepath: Union[str, Path], **kwargs) -> "DataLoader":
-		"""Load data và cập nhật instance."""
+		"""Đọc file rồi cập nhật toàn bộ (bản gốc, meta, visualizer)."""
 		self.data = self.load_data(filepath, **kwargs)
 		self.original_data = self.data.copy()
 		self.detect_types()
@@ -121,7 +123,7 @@ class DataLoader:
 	# Profiling utilities
 	# ------------------------------------------------------------------
 	def detect_types(self) -> Dict[str, List[str]]:
-		"""Phân loại các cột theo kiểu dữ liệu."""
+		"""Phân loại các cột theo kiểu dữ liệu : numerical , categorical , datetime , boolean """
 		if self.data is None:
 			raise ValueError("Chưa có dữ liệu để phân loại kiểu.")
 
@@ -142,7 +144,7 @@ class DataLoader:
 		return self.types_
 
 	def eda_overview(self, top_n: int = 10) -> Dict[str, Any]:
-		"""Tạo báo cáo tổng quan EDA."""
+		"""Sinh báo cáo EDA nhanh gồm shape, missing, mô tả số, phân loại và tương quan."""
 		if self.data is None:
 			raise ValueError("Chưa có dữ liệu")
 
@@ -272,7 +274,12 @@ class DataLoader:
 		return self
 
 	def unify_values(self, text_rules: Optional[Dict[str, Dict[str, str]]] = None) -> "DataLoader":
-		"""Thống nhất text values (lowercase, strip)."""
+		"""Chuẩn hóa cột phân loại: ép string, lower/strip và map theo `text_rules`.
+
+		Args:
+			text_rules: Dict dạng {col: {old: new}} để thay thế giá trị sau khi
+				chuẩn hóa.
+		"""
 		if self.data is None:
 			return self
 		self.detect_types()
@@ -353,7 +360,7 @@ class DataLoader:
 		return self
 
 	def feature_engineering(self, min_speed: float = 0.0, max_speed: float = 150.0) -> "DataLoader":
-		"""Tạo feature Speed_kmh từ distance và duration."""
+		"""Tạo thêm feature Speed_kmh từ distance và duration."""
 		if self.data is None:
 			return self
 		df = self.data
@@ -372,31 +379,70 @@ class DataLoader:
 		return self
 
 	# ------------------------------------------------------------------
+	# Feature engineering (pre-split)
+	# ------------------------------------------------------------------
+	def create_datetime_features(
+		self,
+		datetime_col: str,
+		features: Sequence[str] = ("hour", "day", "month", "dayofweek"),
+		drop_original: bool = False,
+	) -> "DataLoader":
+		"""Tạo features từ cột datetime."""
+		if self.data is None or datetime_col not in self.data.columns:
+			return self
+		df = self.data
+		if not pd.api.types.is_datetime64_any_dtype(df[datetime_col]):
+			df[datetime_col] = pd.to_datetime(df[datetime_col], errors="coerce")
+
+		mapping = {
+			"hour": df[datetime_col].dt.hour,
+			"day": df[datetime_col].dt.day,
+			"month": df[datetime_col].dt.month,
+			"year": df[datetime_col].dt.year,
+			"dayofweek": df[datetime_col].dt.dayofweek,
+			"quarter": df[datetime_col].dt.quarter,
+		}
+		for feat in features:
+			if feat in mapping:
+				df[f"{datetime_col}_{feat}"] = mapping[feat]
+		if drop_original:
+			df.drop(columns=[datetime_col], inplace=True)
+		self.data = df
+		self.detect_types()
+		self.preprocessing_steps.append("create_datetime_features")
+		logger.info("📅 Đã tạo datetime features từ cột %s", datetime_col)
+		return self
+
+	def create_interaction_features(
+		self,
+		col_pairs: List[Tuple[str, str]],
+		operations: Sequence[str] = ("multiply",),
+	) -> "DataLoader":
+		"""Tạo interaction features từ các cặp cột."""
+		if self.data is None:
+			return self
+		df = self.data
+		for col1, col2 in col_pairs:
+			if col1 not in df.columns or col2 not in df.columns:
+				continue
+			for op in operations:
+				if op == "multiply":
+					df[f"{col1}_x_{col2}"] = df[col1] * df[col2]
+				elif op == "add":
+					df[f"{col1}_plus_{col2}"] = df[col1] + df[col2]
+				elif op == "subtract":
+					df[f"{col1}_minus_{col2}"] = df[col1] - df[col2]
+				elif op == "divide":
+					df[f"{col1}_div_{col2}"] = df[col1] / (df[col2] + 1e-6)
+		self.data = df
+		self.detect_types()
+		self.preprocessing_steps.append("create_interaction_features")
+		logger.info("🔗 Đã tạo interaction features")
+		return self
+
+	# ------------------------------------------------------------------
 	# Visualization bridge
 	# ------------------------------------------------------------------
-	def plot_correlation_heatmap(
-		self,
-		target_col: Optional[str] = None,
-		method: str = "pearson",
-		save_path: Optional[Union[str, Path]] = None,
-		figsize: Tuple[int, int] = (12, 10),
-		annot: bool = False,
-		show: bool = False,
-	) -> Optional[pd.DataFrame]:
-		"""Vẽ heatmap tương quan."""
-		if self.data is None:
-			logger.warning("❌ Chưa có dữ liệu để vẽ heatmap")
-			return None
-		self.visualizer.set_data(self.data)
-		self.visualizer.set_target(target_col)
-		return self.visualizer.plot_correlation_heatmap(
-			method=method,
-			annot=annot,
-			figsize=figsize,
-			save_path=Path(save_path) if save_path else None,
-			show=show,
-		)
-
 	def generate_eda_report(
 		self,
 		target_col: Optional[str] = None,
@@ -432,7 +478,12 @@ class DataLoader:
 		
 		# 4. Correlation heatmap
 		corr_save_path = self.visualizer.output_dir / "04_correlation_heatmap.png"
-		self.visualizer.plot_correlation_heatmap(method="spearman", annot=True, save_path=corr_save_path, show=False)
+		self.visualizer.plot_correlation_heatmap(
+			method="spearman",
+			annot=True,
+			save_path=corr_save_path,
+			show=False,
+		)
 		
 		# 5. Target analysis
 		if target_col:

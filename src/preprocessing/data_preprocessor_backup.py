@@ -1,4 +1,14 @@
-"""Comprehensive data preprocessing utilities for the Taxi Price Prediction project."""
+"""Legacy preprocessing pipeline module.
+
+Tập hợp đầy đủ các tiện ích trước/sau khi chia train-test được giữ lại để tham
+khảo. Module này tái hiện luồng xử lý cũ trong notebook:
+
+- Load dữ liệu, profiling nhanh và EDA tự động.
+- Làm sạch, chuẩn hóa text, áp constraint và xử lý missing.
+- Mã hóa/chuẩn hóa đặc trưng, tạo feature tương tác và lưu trạng thái để reuse.
+
+Hiện tại dự án đã tách thành `DataLoader` và `DataTransformer`, nhưng file này
+vẫn giúp so sánh hoặc khôi phục pipeline one-stop khi cần."""
 
 from __future__ import annotations
 

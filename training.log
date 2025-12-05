@@ -1,202 +1,175 @@
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | [START] BẮT ĐẦU PIPELINE DỰ ĐOÁN GIÁ TAXI
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | [OK] Dữ liệu đã tồn tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\data\taxi_price.csv
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [START] BẮT ĐẦU PIPELINE DỰ ĐOÁN GIÁ TAXI
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [OK] Dữ liệu đã tồn tại: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\data\taxi_price.csv
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | [CLEAN] BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | [INPUT] Đang nạp và xử lý dữ liệu gốc (DataLoader)
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader | ✅ Đọc dữ liệu thành công từ E:\Hoc Tap\Thuc hanh Python\Do_An_Python\data\taxi_price.csv - Shape: (1000, 11)
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader | 🔤 Đã thống nhất text values (lowercase, strip)
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader | 📏 Áp dụng 8 ràng buộc dữ liệu
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader |    • Trip_Distance_km: clip to [0.0, 140.0]
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader |    • Passenger_Count: clip to [1, 6]
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader |    • Trip_Duration_Minutes: clip to [0.0, 120.0]
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader |    • Trip_Price: dropped 49 rows outside [0.0, None]
-2025-12-05 10:14:49 | INFO     | __main__ |    After pre-split cleaning: (951, 11)
-2025-12-05 10:14:49 | INFO     | src.modeling.base_trainer | [*] Đang tạo các biểu đồ EDA
-2025-12-05 10:14:49 | INFO     | src.preprocessing.data_loader | 📊 Đang tạo báo cáo EDA...
-2025-12-05 10:14:50 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\01_data_overview.png
-2025-12-05 10:14:51 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\02_numeric_distributions.png
-2025-12-05 10:14:52 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\03_categorical_distributions.png
-2025-12-05 10:14:52 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\04_correlation_heatmap.png
-2025-12-05 10:14:53 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\05_target_analysis.png
-2025-12-05 10:14:53 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\eda\06_outliers_boxplot.png
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_loader | ✅ Đã tạo xong báo cáo EDA (6 biểu đồ)
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [SPLIT] Chia train/test
-2025-12-05 10:14:53 | INFO     | __main__ |    Train shape       : (760, 11)
-2025-12-05 10:14:53 | INFO     | __main__ |    Test shape        : (191, 11)
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [PROCESS] Xử lý TRAIN set (DataTransformer.fit_transform)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ✅ DataTransformer khởi tạo thành công - Shape: (760, 11)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🔧 BẮT ĐẦU FIT_TRANSFORM PIPELINE
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 2: Xử lý missing values
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 3: Mã hóa biến phân loại (onehot)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🧩 ENCODING FEATURES | Tổng cột phân loại: 4 | Rule riêng: 0
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Time_of_Day: OneHotEncoder -> 4 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Day_of_Week: OneHotEncoder -> 2 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Traffic_Conditions: OneHotEncoder -> 3 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Weather: OneHotEncoder -> 3 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Tổng cột one-hot mới: 12
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 4: Chuẩn hóa features (standard)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ⚙️  SCALE FEATURES | Tổng cột số: 19 | Có rule riêng: 6
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Trip_Distance_km: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Passenger_Count: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Base_Fare: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Per_Km_Rate: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Per_Minute_Rate: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Trip_Duration_Minutes: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ✅ FIT_TRANSFORM HOÀN TẤT - Shape: (760, 19)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🎯 3 features có |corr| >= 0.3: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 📊 TÓM TẮT DỮ LIỆU
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | {'shape': (760, 19), 'n_numeric_cols': 19, 'n_categorical_cols': 0, 'total_missing': 0, 'preprocessing_steps': ['fill_missing'], 'memory_usage_mb': 0.07550430297851562, 'is_fitted': True}
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [SYNC] Transform TEST set (DataTransformer.transform_new_data)
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | 🧩 ENCODING FEATURES | Tổng cột phân loại: 4 | Rule riêng: 0
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Time_of_Day: OneHotEncoder -> 4 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Day_of_Week: OneHotEncoder -> 2 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Traffic_Conditions: OneHotEncoder -> 3 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Weather: OneHotEncoder -> 3 cột mới
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Tổng cột one-hot mới: 12
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer | ⚙️  SCALE FEATURES | Tổng cột số: 19 | Có rule riêng: 6
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Trip_Distance_km: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Passenger_Count: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Base_Fare: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Per_Km_Rate: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Per_Minute_Rate: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | src.preprocessing.data_transformer |    • Trip_Duration_Minutes: dùng scaler StandardScaler
-2025-12-05 10:14:53 | INFO     | __main__ |    Train processed shape: (760, 19)
-2025-12-05 10:14:53 | INFO     | __main__ |    Test processed shape: (191, 19)
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu dữ liệu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\data\taxi_price_processed.csv
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [CLEAN] BƯỚC 1: TIỀN XỬ LÝ DỮ LIỆU
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [INPUT] Đang nạp và xử lý dữ liệu gốc (DataLoader)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader | ✅ Đọc dữ liệu thành công từ D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\data\taxi_price.csv - Shape: (1000, 11)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader | 🔤 Đã thống nhất text values (lowercase, strip)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader | 📏 Áp dụng 8 ràng buộc dữ liệu
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader |    • Trip_Distance_km: clip to [0.0, 140.0]
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader |    • Passenger_Count: clip to [1, 6]
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader |    • Trip_Duration_Minutes: clip to [0.0, 120.0]
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_loader |    • Trip_Price: dropped 49 rows outside [0.0, None]
+2025-12-05 17:57:24 | INFO     | __main__ |    After pre-split cleaning: (951, 11)
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [SPLIT] Chia train/test
+2025-12-05 17:57:24 | INFO     | __main__ |    Train shape       : (760, 11)
+2025-12-05 17:57:24 | INFO     | __main__ |    Test shape        : (191, 11)
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [PROCESS] Xử lý TRAIN set (DataTransformer.fit_transform)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ✅ DataTransformer khởi tạo thành công - Shape: (760, 11)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🔧 BẮT ĐẦU FIT_TRANSFORM PIPELINE
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 2: Xử lý missing values
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 3: Mã hóa biến phân loại (onehot)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🧩 ENCODING FEATURES | Tổng cột phân loại: 4 | Rule riêng: 0
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Time_of_Day: OneHotEncoder -> 4 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Day_of_Week: OneHotEncoder -> 2 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Traffic_Conditions: OneHotEncoder -> 3 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Weather: OneHotEncoder -> 3 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Tổng cột one-hot mới: 12
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 4: Chuẩn hóa features (standard)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ⚙️  SCALE FEATURES | Tổng cột số: 19 | Có rule riêng: 6
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Trip_Distance_km: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Passenger_Count: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Base_Fare: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Per_Km_Rate: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Per_Minute_Rate: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Trip_Duration_Minutes: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ✅ FIT_TRANSFORM HOÀN TẤT - Shape: (760, 19)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🎯 3 features có |corr| >= 0.3: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 📊 TÓM TẮT DỮ LIỆU
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | {'shape': (760, 19), 'n_numeric_cols': 19, 'n_categorical_cols': 0, 'total_missing': 0, 'preprocessing_steps': ['fill_missing'], 'memory_usage_mb': 0.11029434204101562, 'is_fitted': True}
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [SYNC] Transform TEST set (DataTransformer.transform_new_data)
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | 🧩 ENCODING FEATURES | Tổng cột phân loại: 4 | Rule riêng: 0
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Time_of_Day: OneHotEncoder -> 4 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Day_of_Week: OneHotEncoder -> 2 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Traffic_Conditions: OneHotEncoder -> 3 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Weather: OneHotEncoder -> 3 cột mới
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Tổng cột one-hot mới: 12
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer | ⚙️  SCALE FEATURES | Tổng cột số: 19 | Có rule riêng: 6
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Trip_Distance_km: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Passenger_Count: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Base_Fare: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Per_Km_Rate: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Per_Minute_Rate: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | src.preprocessing.data_transformer |    • Trip_Duration_Minutes: dùng scaler StandardScaler
+2025-12-05 17:57:24 | INFO     | __main__ |    Train processed shape: (760, 19)
+2025-12-05 17:57:24 | INFO     | __main__ |    Test processed shape: (191, 19)
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu dữ liệu tại: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\data\taxi_price_processed.csv
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [MODEL] BƯỚC 2: HUẤN LUYỆN MÔ HÌNH
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [MODEL] BƯỚC 2: HUẤN LUYỆN MÔ HÌNH
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [CONFIG] MODELTRAINER KHỞI TẠO
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [OK] Khởi tạo thành công
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [DATA] Train: (760, 18), Test: (191, 18)
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [CONFIG] MODELTRAINER KHỞI TẠO
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [OK] Khởi tạo thành công
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [DATA] Train: (760, 18), Test: (191, 18)
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [MODEL] HUẤN LUYỆN TẤT CẢ MÔ HÌNH
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [MODEL] HUẤN LUYỆN TẤT CẢ MÔ HÌNH
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [DATA] TRAINING POLYNOMIAL REGRESSION
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | >> degree=3, alpha=1.0
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [NOTE] Sử dụng 3 feature có |corr| >= threshold
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [CALC] Features: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [DATA] Original features: 18
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [BUILD] Polynomial features: 19
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer |    Train RMSE  : 11.197717
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer |    Test RMSE   : 13.915598
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer |    Test MAE    : 8.638145
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer |    Test R²     : 0.917153
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.01 giây
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [DATA] TRAINING POLYNOMIAL REGRESSION
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | >> degree=3, alpha=1.0
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [NOTE] Sử dụng 3 feature có |corr| >= threshold
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [CALC] Features: ['Trip_Distance_km', 'Per_Km_Rate', 'Trip_Duration_Minutes']
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [DATA] Original features: 18
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [BUILD] Polynomial features: 19
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Train RMSE  : 11.197717
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test RMSE   : 13.915598
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test MAE    : 8.638145
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test R²     : 0.917153
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.01 giây
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | [RF] TRAINING RANDOM FOREST
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:53 | INFO     | src.modeling.base_trainer | >> n_estimators=100, max_depth=10
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Train RMSE  : 5.092569
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test RMSE   : 11.950668
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test MAE    : 6.268112
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test R²     : 0.938898
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.22 giây
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [RF] TRAINING RANDOM FOREST
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | >> n_estimators=100, max_depth=10
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Train RMSE  : 5.092569
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test RMSE   : 11.950668
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test MAE    : 6.268112
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer |    Test R²     : 0.938898
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.18 giây
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | [ET] TRAINING EXTRA TREES
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | >> n_estimators=200, max_depth=12
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Train RMSE  : 1.518646
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test RMSE   : 10.478630
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test MAE    : 5.715647
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer |    Test R²     : 0.953024
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.19 giây
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | [ET] TRAINING EXTRA TREES
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:24 | INFO     | src.modeling.base_trainer | >> n_estimators=200, max_depth=12
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Train RMSE  : 1.518646
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test RMSE   : 10.478630
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test MAE    : 5.715647
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test R²     : 0.953024
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.22 giây
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | [XGB] TRAINING XGBOOST
-2025-12-05 10:14:54 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [DATA] Train-Test Gap: 9.64 (target < 3.0)
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Train RMSE  : 6.627971
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test RMSE   : 16.268989
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test MAE    : 6.468146
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test R²     : 0.886762
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 1.54 giây
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [OK] Đã hoàn tất huấn luyện tất cả mô hình!
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [XGB] TRAINING XGBOOST
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [DATA] Train-Test Gap: 9.83 (target < 3.0)
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Train RMSE  : 6.549645
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test RMSE   : 16.384479
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test MAE    : 6.654243
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test R²     : 0.885149
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [TIME] Thời gian train: 0.15 giây
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [OK] Đã hoàn tất huấn luyện tất cả mô hình!
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [DATA] BƯỚC 3: ĐÁNH GIÁ & VISUALIZATION
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [DATA] BƯỚC 3: ĐÁNH GIÁ & VISUALIZATION
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [DATA] TÓM TẮT KẾT QUẢ TRAINING
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [DATA] TÓM TẮT KẾT QUẢ TRAINING
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [BEST] MÔ HÌNH TỐT NHẤT
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [WINNER] Model: EXTRA_TREES
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test R²     : 0.953024
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test RMSE   : 10.478630
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer |    Test MAE    : 5.715647
-2025-12-05 10:14:55 | INFO     | src.modeling.model_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [BEST] MÔ HÌNH TỐT NHẤT
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [WINNER] Model: EXTRA_TREES
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test R²     : 0.953024
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test RMSE   : 10.478630
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer |    Test MAE    : 5.715647
+2025-12-05 17:57:25 | INFO     | src.modeling.model_trainer | ======================================================================
 
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu kết quả: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\model\model_results.json
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu kết quả: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\results\model\model_results.json
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] LƯU TẤT CẢ CÁC MÔ HÌNH
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models\polynomial.joblib
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models\random_forest.joblib
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models\extra_trees.joblib
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models\xgboost.joblib
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [OK] Hoàn tất lưu 4 mô hình!
-2025-12-05 10:14:55 | INFO     | src.preprocessing.data_transformer | ✅ Đã lưu transformer state tại E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models\data_transformer.joblib
-2025-12-05 10:14:55 | INFO     | __main__ | ✅ Đã lưu pipeline metadata: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\pipeline_state.json
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [CHART] Vẽ biểu đồ metrics tổng hợp
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] LƯU TẤT CẢ CÁC MÔ HÌNH
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models\polynomial.joblib
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models\random_forest.joblib
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models\extra_trees.joblib
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [SAVE] Đã lưu mô hình: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models\xgboost.joblib
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [OK] Hoàn tất lưu 4 mô hình!
+2025-12-05 17:57:25 | INFO     | src.preprocessing.data_transformer | ✅ Đã lưu transformer state tại D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models\data_transformer.joblib
+2025-12-05 17:57:25 | INFO     | __main__ | ✅ Đã lưu pipeline metadata: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\results\pipeline_state.json
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | [DATA] VẼ BIỂU ĐỒ METRICS TỔNG HỢP
-2025-12-05 10:14:55 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:56 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\model\metrics_summary.png
-2025-12-05 10:14:56 | INFO     | src.modeling.base_trainer | [CHART] Vẽ biểu đồ predictions tổng hợp
-2025-12-05 10:14:56 | INFO     | src.modeling.base_trainer | 
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [BEST] MÔ HÌNH TỐT NHẤT
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | __main__ |    Model             : EXTRA_TREES
+2025-12-05 17:57:25 | INFO     | __main__ |    Test R²           : 0.953024
+2025-12-05 17:57:25 | INFO     | __main__ |    Test RMSE         : 10.478630
+2025-12-05 17:57:25 | INFO     | __main__ |    Test MAE          : 5.715647
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | 
 ======================================================================
-2025-12-05 10:14:56 | INFO     | src.modeling.base_trainer | [CHART] VẼ BIỂU ĐỒ PREDICTIONS TỔNG HỢP
-2025-12-05 10:14:56 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:57 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\model\predictions_combined.png
-2025-12-05 10:14:57 | INFO     | src.modeling.base_trainer | [CHART] Vẽ biểu đồ feature importance so sánh
-2025-12-05 10:14:57 | INFO     | src.modeling.base_trainer | 
-======================================================================
-2025-12-05 10:14:57 | INFO     | src.modeling.base_trainer | [DATA] SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH
-2025-12-05 10:14:57 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:58 | INFO     | src.visualization.data_visualizer | Visualization saved to E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results\model\feature_importance_comparison.png
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | 
-======================================================================
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | [BEST] MÔ HÌNH TỐT NHẤT
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:58 | INFO     | __main__ |    Model             : EXTRA_TREES
-2025-12-05 10:14:58 | INFO     | __main__ |    Test R²           : 0.953024
-2025-12-05 10:14:58 | INFO     | __main__ |    Test RMSE         : 10.478630
-2025-12-05 10:14:58 | INFO     | __main__ |    Test MAE          : 5.715647
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | 
-======================================================================
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | [OK] HOÀN TẤT PIPELINE
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | ======================================================================
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | [*] Mô hình đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\models
-2025-12-05 10:14:58 | INFO     | src.modeling.base_trainer | [*] Kết quả đã lưu tại: E:\Hoc Tap\Thuc hanh Python\Do_An_Python\results
-2025-12-05 10:14:58 | INFO     | __main__ | 
-2025-12-05 10:14:58 | INFO     | __main__ | ⏱️ PIPELINE SUMMARY
-2025-12-05 10:14:58 | INFO     | __main__ |    Download          : 0.00 giây
-2025-12-05 10:14:58 | INFO     | __main__ |    Preprocess        : 4.08 giây
-2025-12-05 10:14:58 | INFO     | __main__ |    Train             : 1.96 giây
-2025-12-05 10:14:58 | INFO     | __main__ |    Evaluate          : 2.30 giây
-2025-12-05 10:14:58 | INFO     | __main__ |    Total             : 8.34 giây
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [OK] HOÀN TẤT PIPELINE
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | ======================================================================
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [*] Mô hình đã lưu tại: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\models
+2025-12-05 17:57:25 | INFO     | src.modeling.base_trainer | [*] Kết quả đã lưu tại: D:\Nhập môn Python\Đồ án cuối kì\Do_An_Python\results
+2025-12-05 17:57:25 | INFO     | __main__ | 
+2025-12-05 17:57:25 | INFO     | __main__ | ⏱️ PIPELINE SUMMARY
+2025-12-05 17:57:25 | INFO     | __main__ |    Download          : 0.00 giây
+2025-12-05 17:57:25 | INFO     | __main__ |    Preprocess        : 0.09 giây
+2025-12-05 17:57:25 | INFO     | __main__ |    Train             : 0.57 giây
+2025-12-05 17:57:25 | INFO     | __main__ |    Evaluate          : 0.14 giây
+2025-12-05 17:57:25 | INFO     | __main__ |    Total             : 0.80 giây
