@@ -142,6 +142,7 @@ class DataVisualizer:
     # Exploratory plots
     # ------------------------------------------------------------------
     def plot_numerical(self, cols: Optional[Sequence[str]] = None, bins: int = 30) -> None:
+        """Vẽ riêng từng numeric column (deprecated - dùng plot_numeric_grid)."""
         numeric_cols = self._validate_cols(cols, dtype_include=["number"])
         if not numeric_cols:
             return
@@ -155,6 +156,305 @@ class DataVisualizer:
             axes[1].set_title(f"Outliers: {col}")
             plt.tight_layout()
             self._finalize_plot(fig, f"numeric_{col}")
+
+    def plot_numeric_grid(
+        self, 
+        cols: Optional[Sequence[str]] = None, 
+        bins: int = 30,
+        show: Optional[bool] = None,
+    ) -> None:
+        """
+        Vẽ tất cả numeric features trong 1 figure dạng grid.
+        Mỗi feature có histogram với KDE.
+        """
+        numeric_cols = self._validate_cols(cols, dtype_include=["number"])
+        if not numeric_cols:
+            return
+        
+        n_cols_plot = len(numeric_cols)
+        n_cols_grid = 3  # 3 features per row
+        n_rows = (n_cols_plot + n_cols_grid - 1) // n_cols_grid
+        
+        fig, axes = plt.subplots(n_rows, n_cols_grid, figsize=(16, 4 * n_rows))
+        if n_cols_plot == 1:
+            axes = np.array([axes])
+        axes = axes.flatten()
+        
+        for idx, col in enumerate(numeric_cols):
+            ax = axes[idx]
+            
+            # Histogram với KDE
+            sns.histplot(self.data[col], kde=True, ax=ax, bins=bins, color="steelblue", alpha=0.7)
+            
+            # Thêm thông tin thống kê - chỉ vẽ đường mean
+            mean_val = self.data[col].mean()
+            median_val = self.data[col].median()
+            std_val = self.data[col].std()
+            
+            ax.axvline(mean_val, color='red', linestyle='--', linewidth=1.5)
+            ax.axvline(median_val, color='green', linestyle='-', linewidth=1.5)
+            
+            # Title với stats gọn gàng
+            ax.set_title(f"{col}\n(Mean={mean_val:.1f}, Median={median_val:.1f}, Std={std_val:.1f})", 
+                        fontweight='bold', fontsize=10)
+            ax.set_xlabel('')
+            ax.set_ylabel('')
+        
+        # Ẩn các subplot trống
+        for idx in range(n_cols_plot, len(axes)):
+            axes[idx].set_visible(False)
+        
+        # Legend chung ở ngoài
+        fig.legend(['Mean', 'Median'], loc='upper right', fontsize=10, 
+                   framealpha=0.9, bbox_to_anchor=(0.99, 0.99))
+        
+        plt.suptitle("Numeric Features Distribution", fontweight='bold', fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "02_numeric_distributions", show=show)
+
+    def plot_outliers_boxplot(
+        self, 
+        cols: Optional[Sequence[str]] = None,
+        show: Optional[bool] = None,
+    ) -> None:
+        """
+        Vẽ boxplot để phát hiện outliers cho tất cả numeric features.
+        """
+        numeric_cols = self._validate_cols(cols, dtype_include=["number"])
+        if not numeric_cols:
+            return
+        
+        n_cols_plot = len(numeric_cols)
+        n_cols_grid = 3
+        n_rows = (n_cols_plot + n_cols_grid - 1) // n_cols_grid
+        
+        fig, axes = plt.subplots(n_rows, n_cols_grid, figsize=(16, 4 * n_rows))
+        if n_cols_plot == 1:
+            axes = np.array([axes])
+        axes = axes.flatten()
+        
+        for idx, col in enumerate(numeric_cols):
+            ax = axes[idx]
+            
+            # Boxplot
+            box_data = self.data[col].dropna()
+            bp = ax.boxplot(box_data, vert=False, patch_artist=True,
+                           boxprops=dict(facecolor='lightblue', color='navy'),
+                           medianprops=dict(color='red', linewidth=2),
+                           whiskerprops=dict(color='navy'),
+                           capprops=dict(color='navy'),
+                           flierprops=dict(marker='o', markerfacecolor='red', markersize=4, alpha=0.5))
+            
+            # Tính IQR và số outliers
+            q1, q3 = box_data.quantile([0.25, 0.75])
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+            n_outliers = ((box_data < lower_bound) | (box_data > upper_bound)).sum()
+            outlier_pct = n_outliers / len(box_data) * 100
+            
+            # Title với thông tin outlier
+            ax.set_title(f"{col}\n(Outliers: {n_outliers} = {outlier_pct:.1f}%)", 
+                        fontweight='bold', fontsize=10,
+                        color='red' if outlier_pct > 5 else 'black')
+            ax.set_xlabel('')
+            ax.set_yticks([])
+            
+            # Thêm text IQR bounds
+            ax.text(0.02, 0.85, f'Q1={q1:.1f}\nQ3={q3:.1f}\nIQR={iqr:.1f}', 
+                   transform=ax.transAxes, fontsize=8,
+                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.7))
+        
+        # Ẩn các subplot trống
+        for idx in range(n_cols_plot, len(axes)):
+            axes[idx].set_visible(False)
+        
+        plt.suptitle("Outlier Detection (Boxplot)", fontweight='bold', fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "06_outliers_boxplot", show=show)
+
+    def plot_categorical_grid(
+        self, 
+        cols: Optional[Sequence[str]] = None, 
+        top_n: int = 10,
+        show: Optional[bool] = None,
+    ) -> None:
+        """Vẽ tất cả categorical features trong 1 figure dạng grid."""
+        cat_cols = self._validate_cols(cols, dtype_include=["object", "category"])
+        if not cat_cols:
+            return
+        
+        # Lọc bỏ columns có quá nhiều unique values
+        valid_cols = [c for c in cat_cols if self.data[c].nunique() <= 50]
+        if not valid_cols:
+            logger.warning("No valid categorical columns to plot")
+            return
+        
+        n_cols_plot = len(valid_cols)
+        n_cols_grid = min(n_cols_plot, 2)
+        n_rows = (n_cols_plot + n_cols_grid - 1) // n_cols_grid
+        
+        fig, axes = plt.subplots(n_rows, n_cols_grid, figsize=(7 * n_cols_grid, 5 * n_rows))
+        if n_cols_plot == 1:
+            axes = [axes]
+        else:
+            axes = axes.flatten()
+        
+        colors = sns.color_palette("viridis", top_n)
+        
+        for idx, col in enumerate(valid_cols):
+            ax = axes[idx]
+            counts = self.data[col].value_counts().head(top_n)
+            
+            bars = ax.barh(counts.index[::-1], counts.values[::-1], color=colors[:len(counts)])
+            ax.set_xlabel("Count")
+            ax.set_title(col, fontweight='bold', fontsize=11)
+            
+            # Thêm số count trên mỗi bar
+            for bar in bars:
+                width = bar.get_width()
+                ax.text(width, bar.get_y() + bar.get_height()/2, f'{int(width):,}',
+                       ha='left', va='center', fontsize=9)
+        
+        # Ẩn các subplot trống
+        for idx in range(n_cols_plot, len(axes)):
+            axes[idx].set_visible(False)
+        
+        plt.suptitle("Categorical Features Distribution", fontweight='bold', fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "03_categorical_distributions", show=show)
+
+    def plot_data_overview(self, show: Optional[bool] = None) -> None:
+        """
+        Vẽ biểu đồ tổng quan dataset: shape, missing, dtypes.
+        """
+        if self.data is None:
+            return
+        
+        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        
+        # 1. Missing values
+        ax1 = axes[0]
+        missing = self.data.isnull().sum()
+        missing_pct = (missing / len(self.data) * 100).sort_values(ascending=True)
+        colors = ['#e74c3c' if v > 0 else '#2ecc71' for v in missing_pct.values]
+        ax1.barh(missing_pct.index, missing_pct.values, color=colors)
+        ax1.set_xlabel("Missing %")
+        ax1.set_title("Missing Values by Column", fontweight='bold')
+        ax1.axvline(x=5, color='orange', linestyle='--', alpha=0.7, label='5% threshold')
+        
+        # 2. Data types
+        ax2 = axes[1]
+        dtype_counts = self.data.dtypes.astype(str).value_counts()
+        colors2 = sns.color_palette("Set2", len(dtype_counts))
+        wedges, texts, autotexts = ax2.pie(
+            dtype_counts.values, 
+            labels=dtype_counts.index,
+            autopct='%1.1f%%',
+            colors=colors2,
+            explode=[0.05] * len(dtype_counts)
+        )
+        ax2.set_title("Column Data Types", fontweight='bold')
+        
+        # 3. Dataset info text
+        ax3 = axes[2]
+        ax3.axis('off')
+        
+        n_rows, n_cols = self.data.shape
+        n_numeric = len(self.data.select_dtypes(include=['number']).columns)
+        n_categorical = len(self.data.select_dtypes(include=['object', 'category']).columns)
+        total_missing = self.data.isnull().sum().sum()
+        missing_pct_total = total_missing / (n_rows * n_cols) * 100
+        memory_mb = self.data.memory_usage(deep=True).sum() / 1024**2
+        n_duplicates = self.data.duplicated().sum()
+        
+        info_text = f"""
+        DATASET OVERVIEW
+        {'='*40}
+        
+        Shape: {n_rows:,} rows x {n_cols} columns
+        
+        Column Types:
+           - Numeric: {n_numeric}
+           - Categorical: {n_categorical}
+        
+        Missing Values:
+           - Total: {total_missing:,} ({missing_pct_total:.2f}%)
+           - Columns with missing: {(missing > 0).sum()}
+        
+        Duplicates: {n_duplicates:,} rows
+        
+        Memory: {memory_mb:.2f} MB
+        """
+        
+        ax3.text(0.1, 0.5, info_text, transform=ax3.transAxes, fontsize=12,
+                verticalalignment='center', fontfamily='monospace',
+                bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.3))
+        
+        plt.suptitle("Data Overview", fontweight='bold', fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "01_data_overview", show=show)
+
+    def plot_target_analysis(
+        self, 
+        top_n_corr: int = 10,
+        show: Optional[bool] = None,
+    ) -> None:
+        """
+        Vẽ phân tích target: distribution + top correlations.
+        """
+        if self.data is None or not self.target_col:
+            logger.warning("Target column required for target analysis")
+            return
+        
+        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        
+        target_data = self.data[self.target_col]
+        
+        # 1. Target distribution
+        ax1 = axes[0]
+        sns.histplot(target_data, kde=True, ax=ax1, color='#3498db', bins=30)
+        ax1.axvline(target_data.mean(), color='red', linestyle='--', label=f'Mean: {target_data.mean():.2f}')
+        ax1.axvline(target_data.median(), color='green', linestyle='-', label=f'Median: {target_data.median():.2f}')
+        ax1.set_title(f"Target Distribution: {self.target_col}", fontweight='bold')
+        ax1.legend()
+        
+        # 2. Target boxplot
+        ax2 = axes[1]
+        sns.boxplot(x=target_data, ax=ax2, color='#e74c3c')
+        ax2.set_title(f"Target Outliers: {self.target_col}", fontweight='bold')
+        
+        # Thêm stats
+        q1, q3 = target_data.quantile([0.25, 0.75])
+        iqr = q3 - q1
+        textstr = f'Q1: {q1:.2f}\nQ3: {q3:.2f}\nIQR: {iqr:.2f}\nStd: {target_data.std():.2f}'
+        ax2.text(0.97, 0.97, textstr, transform=ax2.transAxes, fontsize=10,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+        
+        # 3. Top correlations with target
+        ax3 = axes[2]
+        numeric_cols = self.data.select_dtypes(include=['number']).columns.tolist()
+        if self.target_col in numeric_cols:
+            corr_with_target = self.data[numeric_cols].corr()[self.target_col].drop(self.target_col)
+            top_corr = corr_with_target.abs().sort_values(ascending=False).head(top_n_corr)
+            top_corr_values = corr_with_target[top_corr.index]
+            
+            colors = ['#27ae60' if v > 0 else '#e74c3c' for v in top_corr_values.values]
+            bars = ax3.barh(top_corr_values.index[::-1], top_corr_values.values[::-1], color=colors[::-1])
+            ax3.axvline(x=0, color='black', linewidth=0.5)
+            ax3.set_xlabel("Correlation")
+            ax3.set_title(f"Top {top_n_corr} Correlations with {self.target_col}", fontweight='bold')
+            
+            # Thêm giá trị trên bars
+            for bar in bars:
+                width = bar.get_width()
+                ax3.text(width, bar.get_y() + bar.get_height()/2, f'{width:.3f}',
+                        ha='left' if width > 0 else 'right', va='center', fontsize=9)
+        
+        plt.suptitle(f"Target Analysis: {self.target_col}", fontweight='bold', fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "05_target_analysis", show=show)
 
     def plot_categorical(self, cols: Optional[Sequence[str]] = None, top_n: int = 10) -> None:
         cat_cols = self._validate_cols(cols, dtype_include=["object", "category"])
@@ -443,3 +743,124 @@ class DataVisualizer:
     ) -> None:
         y_pred = model.predict(X_test)
         self.plot_regression_diagnostics(y_test, y_pred, model.__class__.__name__, show=show)
+
+    def plot_combined_predictions(
+        self,
+        predictions: Dict[str, Tuple[np.ndarray, np.ndarray]],
+        save_path: Optional[Path] = None,
+        show: Optional[bool] = None,
+    ) -> None:
+        """
+        Vẽ biểu đồ Actual vs Predicted cho tất cả mô hình trong 1 figure.
+        
+        Args:
+            predictions: Dict {model_name: (y_true, y_pred)}
+            save_path: Đường dẫn lưu file
+            show: Hiển thị biểu đồ
+        """
+        if not predictions:
+            logger.warning("Không có predictions để vẽ")
+            return
+        
+        n_models = len(predictions)
+        n_cols = min(n_models, 2)
+        n_rows = (n_models + n_cols - 1) // n_cols
+        
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(7 * n_cols, 6 * n_rows))
+        if n_models == 1:
+            axes = np.array([axes])
+        axes = axes.flatten()
+        
+        colors = ['#3498db', '#e74c3c', '#2ecc71', '#9b59b6']
+        
+        for idx, (model_name, (y_true, y_pred)) in enumerate(predictions.items()):
+            ax = axes[idx]
+            color = colors[idx % len(colors)]
+            
+            # Scatter plot
+            ax.scatter(y_true, y_pred, alpha=0.5, s=20, c=color, label='Predictions')
+            
+            # Perfect prediction line
+            min_val = min(y_true.min(), y_pred.min())
+            max_val = max(y_true.max(), y_pred.max())
+            ax.plot([min_val, max_val], [min_val, max_val], 'k--', lw=2, label='Perfect Fit')
+            
+            # Calculate metrics
+            from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+            r2 = r2_score(y_true, y_pred)
+            rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+            mae = mean_absolute_error(y_true, y_pred)
+            
+            # Add text box with metrics
+            textstr = f'R² = {r2:.4f}\nRMSE = {rmse:.2f}\nMAE = {mae:.2f}'
+            props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+            ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=10,
+                    verticalalignment='top', bbox=props)
+            
+            ax.set_xlabel("Actual", fontweight="bold")
+            ax.set_ylabel("Predicted", fontweight="bold")
+            ax.set_title(f"{model_name.upper()}", fontweight="bold", fontsize=12)
+            ax.grid(alpha=0.3)
+            ax.legend(loc='lower right')
+        
+        # Hide empty subplots
+        for idx in range(n_models, len(axes)):
+            axes[idx].set_visible(False)
+        
+        plt.suptitle("Actual vs Predicted - Model Comparison", fontweight="bold", fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "predictions_combined", save_path=save_path, show=show)
+
+    def plot_metrics_summary(
+        self,
+        results: Dict[str, Dict[str, float]],
+        save_path: Optional[Path] = None,
+        show: Optional[bool] = None,
+    ) -> None:
+        """
+        Vẽ biểu đồ tổng hợp các metrics (R², RMSE, MAE) cho tất cả models.
+        
+        Args:
+            results: Dict {model_name: {'test_r2': ..., 'test_rmse': ..., 'test_mae': ...}}
+            save_path: Đường dẫn lưu file
+            show: Hiển thị biểu đồ
+        """
+        if not results:
+            logger.warning("Không có kết quả để vẽ")
+            return
+        
+        models = list(results.keys())
+        metrics = ['test_r2', 'test_rmse', 'test_mae']
+        metric_labels = ['R² Score', 'RMSE', 'MAE']
+        
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+        colors = sns.color_palette("viridis", len(models))
+        
+        for ax, metric, label in zip(axes, metrics, metric_labels):
+            values = [results[m][metric] for m in models]
+            bars = ax.bar(models, values, color=colors)
+            
+            # Add value labels
+            for bar, val in zip(bars, values):
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width() / 2, height,
+                       f'{val:.4f}', ha='center', va='bottom', fontweight='bold', fontsize=9)
+            
+            ax.set_xlabel("Model", fontweight="bold")
+            ax.set_ylabel(label, fontweight="bold")
+            ax.set_title(label, fontweight="bold", fontsize=12)
+            ax.set_xticklabels([m.upper() for m in models], rotation=15)
+            ax.grid(axis="y", alpha=0.3)
+            
+            # Highlight best model
+            if metric == 'test_r2':
+                best_idx = np.argmax(values)
+            else:
+                best_idx = np.argmin(values)
+            bars[best_idx].set_color('#27ae60')
+            bars[best_idx].set_edgecolor('black')
+            bars[best_idx].set_linewidth(2)
+        
+        plt.suptitle("Model Performance Comparison", fontweight="bold", fontsize=14, y=1.02)
+        plt.tight_layout()
+        self._finalize_plot(fig, "metrics_summary", save_path=save_path, show=show)

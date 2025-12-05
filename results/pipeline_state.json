@@ -1,22 +1,22 @@
 {
-    "generated_at": "2025-12-04T15:40:53.890947Z",
-    "preprocessor": {
-        "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\data_preprocessor_20251204_224053.joblib",
+    "generated_at": "2025-12-05T10:14:55.916280+07:00",
+    "transformer": {
+        "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\data_transformer.joblib",
         "target_column": "Trip_Price",
         "n_features": 18
     },
     "models": {
         "polynomial": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\polynomial_20251204_224053.joblib",
+            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\polynomial.joblib",
             "metrics": {
-                "train_rmse": 12.078582804519225,
-                "test_rmse": 15.593636643356307,
-                "test_mae": 9.133598557234912,
-                "test_r2": 0.8959682966050936
+                "train_rmse": 11.197717099036714,
+                "test_rmse": 13.91559769185609,
+                "test_mae": 8.638144634012766,
+                "test_r2": 0.9171534136593872
             },
             "hyperparams": {
-                "degree": 2,
-                "alpha": 2.9154431891537547,
+                "degree": 3,
+                "alpha": 1.0,
                 "feature_subset": [
                     "Trip_Distance_km",
                     "Per_Km_Rate",
@@ -25,63 +25,63 @@
             }
         },
         "random_forest": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\random_forest_20251204_224053.joblib",
+            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\random_forest.joblib",
             "metrics": {
-                "train_rmse": 4.390940543341321,
-                "test_rmse": 11.774889155110557,
-                "test_mae": 6.278873908445939,
-                "test_r2": 0.9406822670965502
+                "train_rmse": 5.092568714032466,
+                "test_rmse": 11.950668005274947,
+                "test_mae": 6.268112201003555,
+                "test_r2": 0.9388980243974094
             },
             "hyperparams": {
-                "n_estimators": 240,
+                "n_estimators": 100,
                 "max_depth": 10,
-                "min_samples_split": 4,
-                "min_samples_leaf": 1
-            }
-        },
-        "extra_trees": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\extra_trees_20251204_224053.joblib",
-            "metrics": {
-                "train_rmse": 3.8393301482068463,
-                "test_rmse": 10.710047563735191,
-                "test_mae": 5.779228529512512,
-                "test_r2": 0.9509257480566176
-            },
-            "hyperparams": {
-                "n_estimators": 126,
-                "max_depth": 13,
                 "min_samples_split": 5,
                 "min_samples_leaf": 2
             }
         },
-        "xgboost": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\xgboost_20251204_224053.joblib",
+        "extra_trees": {
+            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\extra_trees.joblib",
             "metrics": {
-                "train_rmse": 2.3824027752657475,
-                "test_rmse": 16.255096520438006,
-                "test_mae": 6.164907563400921,
-                "test_r2": 0.8869553550023002
+                "train_rmse": 1.518645551553762,
+                "test_rmse": 10.478630146354881,
+                "test_mae": 5.7156471459831915,
+                "test_r2": 0.9530235804481791
+            },
+            "hyperparams": {
+                "n_estimators": 200,
+                "max_depth": 12,
+                "min_samples_split": 2,
+                "min_samples_leaf": 1
+            }
+        },
+        "xgboost": {
+            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\xgboost.joblib",
+            "metrics": {
+                "train_rmse": 6.627971097445265,
+                "test_rmse": 16.26898880043303,
+                "test_mae": 6.468146178308314,
+                "test_r2": 0.8867620471442724
             },
             "hyperparams": {
                 "max_depth": 4,
-                "learning_rate": 0.07835884232668516,
-                "n_estimators": 294,
-                "subsample": 0.8775158550318126,
-                "colsample_bytree": 0.9814532692105566,
-                "min_child_weight": 3,
-                "gamma": 0.7670608175089445,
-                "reg_lambda": 0.2384658683369399,
-                "reg_alpha": 0.15967129024987659,
+                "learning_rate": 0.05,
+                "n_estimators": 150,
+                "subsample": 0.7,
+                "colsample_bytree": 0.7,
+                "min_child_weight": 5,
+                "gamma": 0.1,
+                "reg_lambda": 1.0,
+                "reg_alpha": 0.5,
                 "random_state": 42,
                 "n_jobs": -1
             }
         }
     },
     "best_model": "extra_trees",
-    "best_model_path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python - Copy\\models\\extra_trees_20251204_224053.joblib",
+    "best_model_path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\extra_trees.joblib",
     "best_metrics": {
-        "test_rmse": 10.710047563735191,
-        "test_mae": 5.779228529512512,
-        "test_r2": 0.9509257480566176
+        "test_rmse": 10.478630146354881,
+        "test_mae": 5.7156471459831915,
+        "test_r2": 0.9530235804481791
     }
 }

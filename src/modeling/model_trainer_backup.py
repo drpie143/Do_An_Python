@@ -1,0 +1,1206 @@
+"""
+Module huấn luyện mô hình học máy cho dự án Taxi Price Prediction.
+
+Class ModelTrainer cung cấp các chức năng:
+- Nạp và chia dữ liệu
+- Huấn luyện nhiều mô hình (Polynomial Regression, Random Forest, XGBoost)
+- Tối ưu hyperparameters bằng Optuna
+- Đánh giá và so sánh mô hình
+- Lưu/tải mô hình
+- Trực quan hóa kết quả
+"""
+
+import logging
+import json
+import pickle
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional, Any
+
+import numpy as np
+import pandas as pd
+import joblib
+
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.pipeline import Pipeline
+from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
+import xgboost as xgb
+import optuna
+from optuna.pruners import MedianPruner
+from optuna.samplers import TPESampler
+
+from src.visualization import DataVisualizer
+from config import MODEL_RESULTS_DIR, MODELS_DIR, PLOT_DPI, PLOT_STYLE, FIGURE_SIZE
+
+
+logger = logging.getLogger(__name__)
+
+
+def _divider(width: int = 70, char: str = "=") -> str:
+    return char * width
+
+
+def log_section(title: str, icon: str = "📘") -> None:
+    logger.info("\n%s", _divider())
+    logger.info("%s %s", icon, title.upper())
+    logger.info("%s", _divider())
+
+
+def log_step(message: str, icon: str = "🔸") -> None:
+    logger.info("%s %s", icon, message)
+
+
+def log_metrics(metrics: Dict[str, float]) -> None:
+    for label, value in metrics.items():
+        logger.info("   %-12s: %.6f", label, value)
+
+
+class ModelTrainer:
+    """
+    Lớp xây dựng, huấn luyện và tối ưu các mô hình học máy cho bài toán Regression.
+    
+    Hỗ trợ:
+    - 3 mô hình: Polynomial Regression, XGBoost, Random Forest
+    - Tối ưu hyperparameters bằng Optuna
+    - Logging quá trình huấn luyện
+    - Lưu/tải mô hình
+    - Đánh giá kết quả (RMSE, MAE, R²)
+    
+    Attributes:
+        X_train, X_test: Features của train/test
+        y_train, y_test: Target của train/test
+        models: Dictionary lưu các mô hình đã train
+        best_model: Mô hình tốt nhất
+        results: Lưu kết quả đánh giá
+    """
+    
+    RANDOM_SEED = 42
+    
+    def __init__(self, 
+                 X_train: pd.DataFrame, 
+                 X_test: pd.DataFrame,
+                 y_train: pd.Series,
+                 y_test: pd.Series,
+                 output_dir: str = "./models"):
+        """
+        Khởi tạo ModelTrainer.
+        
+        Args:
+            X_train, X_test: Features
+            y_train, y_test: Target
+            output_dir: Thư mục lưu kết quả
+        """
+        self.X_train = X_train.copy()
+        self.X_test = X_test.copy()
+        self.y_train = y_train.copy()
+        self.y_test = y_test.copy()
+        
+        self.output_dir = Path(output_dir) if output_dir else MODELS_DIR
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        self.models = {}
+        self.X_train_transformed = {}  # Lưu X_train đã transform (cho Polynomial)
+        self.X_test_transformed = {}   # Lưu X_test đã transform (cho Polynomial)
+        self.best_model = None
+        self.best_model_name = None
+        self.results = {}
+        self.optimization_history = {}
+        self.visualizer = DataVisualizer(
+            output_dir=MODEL_RESULTS_DIR,
+            auto_save=True,
+            auto_show=False,
+            dpi=PLOT_DPI,
+            style=PLOT_STYLE,
+            figure_size=FIGURE_SIZE,
+        )
+        
+        # Set random seed để reproducibility
+        np.random.seed(self.RANDOM_SEED)
+        
+        log_section("MODELTRAINER KHỞI TẠO", icon="⚙️")
+        log_step("Khởi tạo thành công", icon="✅")
+        log_step(f"Train: {self.X_train.shape}, Test: {self.X_test.shape}", icon="📊")
+    
+    @property
+    def data_info(self) -> Dict[str, Any]:
+        """Trả về thông tin dữ liệu."""
+        return {
+            'train_shape': self.X_train.shape,
+            'test_shape': self.X_test.shape,
+            'n_features': self.X_train.shape[1],
+            'n_samples_train': self.X_train.shape[0],
+            'n_samples_test': self.X_test.shape[0]
+        }
+    
+    # ========== POLYNOMIAL REGRESSION ==========
+    def _objective_polynomial(self, trial: optuna.Trial) -> float:
+        """Objective function cho Polynomial Regression optimization."""
+        degree = trial.suggest_int('degree', 2, 5)
+        alpha = trial.suggest_float('alpha', 1e-3, 10, log=True)
+        
+        pipeline = Pipeline([
+            ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
+            ('regressor', Ridge(alpha=alpha))
+        ])
+        
+        cv_scores = cross_val_score(
+            pipeline,
+            self.X_train,
+            self.y_train,
+            cv=5,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1
+        )
+        rmse = np.sqrt(-cv_scores.mean())
+        return rmse
+    
+    def optimize_polynomial(self, n_trials: int = 10, timeout: int = 300) -> Dict:
+        log_section("TỐI ƯU POLYNOMIAL REGRESSION", icon="🔍")
+        
+        sampler = TPESampler(seed=self.RANDOM_SEED)
+        pruner = MedianPruner()
+        
+        study = optuna.create_study(
+            sampler=sampler,
+            pruner=pruner,
+            direction='minimize'
+        )
+        study.optimize(
+            self._objective_polynomial,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        best_params = study.best_params
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
+        
+        self.optimization_history['polynomial'] = {
+            'best_params': best_params,
+            'best_value': study.best_value,
+            'n_trials': len(study.trials)
+        }
+        return best_params
+    
+    def train_polynomial(self, degree: int = 3, alpha: float = 1.0,
+                         feature_subset: Optional[List[str]] = None) -> None:
+        """Huấn luyện Polynomial Regression (dữ liệu đã được scale ở preprocessing)."""
+        start_time = time.perf_counter()
+        log_section("TRAINING POLYNOMIAL REGRESSION", icon="📊")
+        log_step(f"degree={degree}, alpha={alpha}")
+        if feature_subset:
+            valid_features = [col for col in feature_subset if col in self.X_train.columns]
+            missing = [col for col in feature_subset if col not in self.X_train.columns]
+            if missing:
+                logger.warning(f"⚠️  Các feature không tồn tại và sẽ bị bỏ qua: {missing}")
+            if not valid_features:
+                logger.warning("⚠️  Không còn feature hợp lệ sau khi lọc. Sử dụng toàn bộ features.")
+                feature_subset = None
+            else:
+                feature_subset = valid_features
+                log_step(f"Sử dụng {len(feature_subset)} feature có |corr| >= threshold", icon="📌")
+                log_step(f"Features: {feature_subset}", icon="🧮")
+        
+        base_X_train = self.X_train[feature_subset] if feature_subset else self.X_train
+        base_X_test = self.X_test[feature_subset] if feature_subset else self.X_test
+        
+        poly = PolynomialFeatures(degree=degree, include_bias=False)
+        X_train_poly = poly.fit_transform(base_X_train)
+        X_test_poly = poly.transform(base_X_test)
+        
+        log_step(f"Original features: {self.X_train.shape[1]}", icon="📊")
+        log_step(f"Polynomial features: {X_train_poly.shape[1]}", icon="🧱")
+        
+        model = Ridge(alpha=alpha)
+        model.fit(X_train_poly, self.y_train)
+
+        y_pred_train = model.predict(X_train_poly)
+        y_pred_test = model.predict(X_test_poly)
+        
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
+        test_mae = mean_absolute_error(self.y_test, y_pred_test)
+        test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        self.models['polynomial'] = {
+            'model': model,
+            'poly': poly,
+            'feature_subset': feature_subset
+        }
+        self.X_train_transformed['polynomial'] = X_train_poly
+        self.X_test_transformed['polynomial'] = X_test_poly
+        
+        self.results['polynomial'] = {
+            'train_rmse': float(train_rmse),
+            'test_rmse': float(test_rmse),
+            'test_mae': float(test_mae),
+            'test_r2': float(test_r2),
+            'hyperparams': {
+                'degree': degree,
+                'alpha': alpha,
+                'feature_subset': feature_subset if feature_subset else 'all'
+            }
+        }
+        
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
+    
+    # ========== RANDOM FOREST REGRESSION ==========
+    def _objective_rf(self, trial: optuna.Trial) -> float:
+        """Objective function cho Random Forest optimization."""
+        n_estimators = trial.suggest_int('n_estimators', 50, 300)
+        max_depth = trial.suggest_int('max_depth', 5, 20)
+        min_samples_split = trial.suggest_int('min_samples_split', 2, 10)
+        min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 5)
+        
+        model = RandomForestRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        # Dùng cross-validation TRÊN TRAIN SET
+        from sklearn.model_selection import cross_val_score
+        cv_scores = cross_val_score(
+            model, self.X_train, self.y_train,
+            cv=5,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1
+        )
+        rmse = np.sqrt(-cv_scores.mean())
+        
+        return rmse
+    
+    def optimize_rf(self, n_trials: int = 20, timeout: int = 600) -> Dict:
+        """
+        Tối ưu hyperparameters cho Random Forest.
+        
+        Args:
+            n_trials: Số lần thử
+            timeout: Timeout tính bằng giây
+            
+        Returns:
+            Dictionary chứa best params
+        """
+        log_section("TỐI ƯU RANDOM FOREST", icon="🔍")
+        
+        sampler = TPESampler(seed=self.RANDOM_SEED)
+        pruner = MedianPruner()
+        
+        study = optuna.create_study(
+            sampler=sampler,
+            pruner=pruner,
+            direction='minimize'
+        )
+        
+        study.optimize(
+            self._objective_rf,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        best_params = study.best_params
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
+        
+        self.optimization_history['random_forest'] = {
+            'best_params': best_params,
+            'best_value': study.best_value,
+            'n_trials': len(study.trials)
+        }
+        
+        return best_params
+    
+    def train_rf(self, 
+                 n_estimators: int = 100,
+                 max_depth: int = 10,
+                 min_samples_split: int = 5,
+                 min_samples_leaf: int = 2) -> None:
+        """Huấn luyện Random Forest."""
+        start_time = time.perf_counter()
+        log_section("TRAINING RANDOM FOREST", icon="🌲")
+        log_step(f"n_estimators={n_estimators}, max_depth={max_depth}")
+        
+        model = RandomForestRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        # Tree-based model KHÔNG CẦN scale
+        model.fit(self.X_train, self.y_train)
+        
+        # Đánh giá
+        y_pred_train = model.predict(self.X_train)
+        y_pred_test = model.predict(self.X_test)
+        
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
+        test_mae = mean_absolute_error(self.y_test, y_pred_test)
+        test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        # Lưu model
+        self.models['random_forest'] = {'model': model}
+        self.results['random_forest'] = {
+            'train_rmse': train_rmse,
+            'test_rmse': test_rmse,
+            'test_mae': test_mae,
+            'test_r2': test_r2,
+            'hyperparams': {
+                'n_estimators': n_estimators,
+                'max_depth': max_depth,
+                'min_samples_split': min_samples_split,
+                'min_samples_leaf': min_samples_leaf
+            }
+        }
+        
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
+    
+    # ========== EXTRA TREES REGRESSION ==========
+    def _objective_extra_trees(self, trial: optuna.Trial) -> float:
+        """Objective function cho Extra Trees optimization."""
+        n_estimators = trial.suggest_int('n_estimators', 50, 300)
+        max_depth = trial.suggest_int('max_depth', 5, 20)
+        min_samples_split = trial.suggest_int('min_samples_split', 2, 10)
+        min_samples_leaf = trial.suggest_int('min_samples_leaf', 1, 5)
+        
+        model = ExtraTreesRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        cv_scores = cross_val_score(
+            model, self.X_train, self.y_train,
+            cv=5,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1
+        )
+        rmse = np.sqrt(-cv_scores.mean())
+        
+        return rmse
+    
+    def optimize_extra_trees(self, n_trials: int = 20, timeout: int = 600) -> Dict:
+        """
+        Tối ưu hyperparameters cho Extra Trees.
+        
+        Args:
+            n_trials: Số lần thử
+            timeout: Timeout tính bằng giây
+            
+        Returns:
+            Dictionary chứa best params
+        """
+        log_section("TỐI ƯU EXTRA TREES", icon="🔍")
+        
+        sampler = TPESampler(seed=self.RANDOM_SEED)
+        pruner = MedianPruner()
+        
+        study = optuna.create_study(
+            sampler=sampler,
+            pruner=pruner,
+            direction='minimize'
+        )
+        
+        study.optimize(
+            self._objective_extra_trees,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        best_params = study.best_params
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
+        
+        self.optimization_history['extra_trees'] = {
+            'best_params': best_params,
+            'best_value': study.best_value,
+            'n_trials': len(study.trials)
+        }
+        
+        return best_params
+    
+    def train_extra_trees(self, 
+                          n_estimators: int = 200,
+                          max_depth: int = 12,
+                          min_samples_split: int = 2,
+                          min_samples_leaf: int = 1) -> None:
+        """Huấn luyện Extra Trees (Extremely Randomized Trees)."""
+        start_time = time.perf_counter()
+        log_section("TRAINING EXTRA TREES", icon="🌳")
+        log_step(f"n_estimators={n_estimators}, max_depth={max_depth}")
+        
+        model = ExtraTreesRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=self.RANDOM_SEED,
+            n_jobs=-1
+        )
+        
+        # Tree-based model KHÔNG CẦN scale
+        model.fit(self.X_train, self.y_train)
+        
+        # Đánh giá
+        y_pred_train = model.predict(self.X_train)
+        y_pred_test = model.predict(self.X_test)
+        
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
+        test_mae = mean_absolute_error(self.y_test, y_pred_test)
+        test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        # Lưu model
+        self.models['extra_trees'] = {'model': model}
+        self.results['extra_trees'] = {
+            'train_rmse': train_rmse,
+            'test_rmse': test_rmse,
+            'test_mae': test_mae,
+            'test_r2': test_r2,
+            'hyperparams': {
+                'n_estimators': n_estimators,
+                'max_depth': max_depth,
+                'min_samples_split': min_samples_split,
+                'min_samples_leaf': min_samples_leaf
+            }
+        }
+        
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
+    
+    # ========== XGBOOST REGRESSION ==========
+    def _objective_xgb(self, trial: optuna.Trial) -> float:
+        """Objective function cho XGBoost optimization.
+        
+        Điều chỉnh search space để giảm overfitting trên dataset nhỏ:
+        - max_depth: 2-4 (giới hạn cứng)
+        - min_child_weight: 5-15 (cao hơn để tránh overfit)
+        - Regularization mạnh
+        - Early stopping
+        """
+        params = {
+            'max_depth': trial.suggest_int('max_depth', 4, 10),
+            'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
+            'n_estimators': trial.suggest_int('n_estimators', 100, 500),
+            'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+            'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+            'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+            'gamma': trial.suggest_float('gamma', 0.0, 1.0),
+            'reg_lambda': trial.suggest_float('reg_lambda', 0.01, 10.0, log=True),
+            'reg_alpha': trial.suggest_float('reg_alpha', 0.0, 1.0),
+            'random_state': self.RANDOM_SEED,
+        }
+        
+        model = xgb.XGBRegressor(**params)
+        
+        # Dùng cross-validation TRÊN TRAIN SET
+        cv_scores = cross_val_score(
+            model, self.X_train, self.y_train,
+            cv=5,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1
+        )
+        rmse = np.sqrt(-cv_scores.mean())
+        
+        return rmse
+    
+    def optimize_xgb(self, n_trials: int = 30, timeout: int = 900) -> Dict:
+        """
+        Tối ưu hyperparameters cho XGBoost.
+        
+        Args:
+            n_trials: Số lần thử
+            timeout: Timeout tính bằng giây
+            
+        Returns:
+            Dictionary chứa best params
+        """
+        log_section("TỐI ƯU XGBOOST", icon="🔍")
+        
+        sampler = TPESampler(seed=self.RANDOM_SEED)
+        pruner = MedianPruner()
+        
+        study = optuna.create_study(
+            sampler=sampler,
+            pruner=pruner,
+            direction='minimize'
+        )
+        
+        study.optimize(
+            self._objective_xgb,
+            n_trials=n_trials,
+            timeout=timeout,
+            show_progress_bar=True
+        )
+        
+        best_params = study.best_params
+        log_step(f"Best params: {best_params}", icon="✅")
+        log_metrics({"Best RMSE": study.best_value})
+        
+        self.optimization_history['xgboost'] = {
+            'best_params': best_params,
+            'best_value': study.best_value,
+            'n_trials': len(study.trials)
+        }
+        
+        return best_params
+    
+    def train_xgb(self, **xgb_params) -> None:
+        """
+        Huấn luyện XGBoost với early stopping để tránh overfit.
+        
+        Args:
+            **xgb_params: XGBoost hyperparameters
+        """
+        start_time = time.perf_counter()
+        log_section("TRAINING XGBOOST", icon="⚡")
+        
+        # XGBoost params tối ưu - KHÔNG cần regularization mạnh vì tree-based
+        default_params = {
+            'max_depth': 6,                # Độ sâu tốt cho XGBoost
+            'learning_rate': 0.1,          # Learning rate chuẩn
+            'n_estimators': 300,           # Đủ cây để học
+            'subsample': 0.8,              # Sample đủ dữ liệu
+            'colsample_bytree': 0.8,       # Sample đủ features
+            'min_child_weight': 1,         # Mặc định
+            'gamma': 0,                    # Không cần pruning mạnh
+            'reg_lambda': 1.0,             # L2 mặc định
+            'reg_alpha': 0,                # L1 mặc định
+            'random_state': self.RANDOM_SEED,
+            'n_jobs': -1                   # Dùng tất cả CPU
+        }
+        
+        # Update với params được truyền vào
+        default_params.update(xgb_params)
+        
+        # Loại bỏ early_stopping_rounds nếu có (sẽ xử lý riêng)
+        early_stopping = default_params.pop('early_stopping_rounds', None)
+        
+        model = xgb.XGBRegressor(**default_params)
+        
+        # Dùng early stopping với validation set (20% của train)
+        if early_stopping:
+            from sklearn.model_selection import train_test_split as tts
+            X_tr, X_val, y_tr, y_val = tts(
+                self.X_train, self.y_train, 
+                test_size=0.2, 
+                random_state=self.RANDOM_SEED
+            )
+            model.fit(
+                X_tr, y_tr,
+                eval_set=[(X_val, y_val)],
+                verbose=False
+            )
+        else:
+            model.fit(self.X_train, self.y_train, verbose=False)
+        
+        # Đánh giá
+        y_pred_train = model.predict(self.X_train)
+        y_pred_test = model.predict(self.X_test)
+        
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_pred_train))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_pred_test))
+        test_mae = mean_absolute_error(self.y_test, y_pred_test)
+        test_r2 = r2_score(self.y_test, y_pred_test)
+        
+        # Log gap để theo dõi overfit
+        gap = train_rmse - test_rmse
+        log_step(f"Train-Test Gap: {abs(gap):.2f} (target < 3.0)", icon="📊")
+        
+        # Lưu model
+        self.models['xgboost'] = {'model': model}
+        self.results['xgboost'] = {
+            'train_rmse': train_rmse,
+            'test_rmse': test_rmse,
+            'test_mae': test_mae,
+            'test_r2': test_r2,
+            'hyperparams': default_params
+        }
+        
+        log_metrics({
+            "Train RMSE": train_rmse,
+            "Test RMSE": test_rmse,
+            "Test MAE": test_mae,
+            "Test R²": test_r2,
+        })
+        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
+    
+    # ========== TRAIN ALL MODELS ==========
+    def train_all(
+        self,
+        optimize: bool = False,
+        poly_feature_subset: Optional[List[str]] = None,
+        hyperparams: Optional[Dict[str, Dict]] = None,
+        optuna_config: Optional[Dict[str, Dict]] = None,
+    ) -> "ModelTrainer":
+        """
+        Huấn luyện tất cả các mô hình (Polynomial, Random Forest, Extra Trees, XGBoost).
+        
+        Args:
+            optimize: Có tối ưu hyperparameters với Optuna không
+            poly_feature_subset: Danh sách features cho Polynomial Regression
+            hyperparams: Dict chứa hyperparameters mặc định cho từng model
+                        Format: {'polynomial': {...}, 'random_forest': {...}, ...}
+            optuna_config: Dict chứa cấu hình Optuna (n_trials, timeout)
+                          Format: {'n_trials': {...}, 'timeout': {...}}
+                          
+        Returns:
+            self để có thể chain methods
+        """
+        log_section("HUẤN LUYỆN TẤT CẢ MÔ HÌNH", icon="🤖")
+        
+        # Default hyperparams
+        default_hyperparams = {
+            'polynomial': {'degree': 3, 'alpha': 1.0},
+            'random_forest': {'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5, 'min_samples_leaf': 2},
+            'extra_trees': {'n_estimators': 200, 'max_depth': 12, 'min_samples_split': 2, 'min_samples_leaf': 1},
+            'xgboost': {'max_depth': 4, 'learning_rate': 0.05, 'n_estimators': 150, 'subsample': 0.7},
+        }
+        if hyperparams:
+            for key in hyperparams:
+                default_hyperparams[key] = hyperparams[key]
+        
+        # Default Optuna config
+        default_optuna = {
+            'n_trials': {'polynomial': 10, 'random_forest': 20, 'extra_trees': 20, 'xgboost': 30},
+            'timeout': {'polynomial': 300, 'random_forest': 600, 'extra_trees': 600, 'xgboost': 900},
+        }
+        if optuna_config:
+            for key in optuna_config:
+                default_optuna[key] = optuna_config[key]
+        
+        # 1. Polynomial Regression
+        if optimize:
+            log_step("Tối ưu Polynomial Regression", icon="🔍")
+            best_poly = self.optimize_polynomial(
+                n_trials=default_optuna['n_trials']['polynomial'],
+                timeout=default_optuna['timeout']['polynomial']
+            )
+            self.train_polynomial(
+                degree=best_poly.get('degree', default_hyperparams['polynomial']['degree']),
+                alpha=best_poly.get('alpha', default_hyperparams['polynomial']['alpha']),
+                feature_subset=poly_feature_subset
+            )
+        else:
+            self.train_polynomial(
+                degree=default_hyperparams['polynomial']['degree'],
+                alpha=default_hyperparams['polynomial']['alpha'],
+                feature_subset=poly_feature_subset
+            )
+        
+        # 2. Random Forest
+        if optimize:
+            log_step("Tối ưu Random Forest", icon="🔍")
+            best_rf = self.optimize_rf(
+                n_trials=default_optuna['n_trials']['random_forest'],
+                timeout=default_optuna['timeout']['random_forest']
+            )
+            self.train_rf(**best_rf)
+        else:
+            self.train_rf(**default_hyperparams['random_forest'])
+        
+        # 3. Extra Trees
+        if optimize:
+            log_step("Tối ưu Extra Trees", icon="🔍")
+            best_et = self.optimize_extra_trees(
+                n_trials=default_optuna['n_trials']['extra_trees'],
+                timeout=default_optuna['timeout']['extra_trees']
+            )
+            self.train_extra_trees(**best_et)
+        else:
+            self.train_extra_trees(**default_hyperparams['extra_trees'])
+        
+        # 4. XGBoost
+        if optimize:
+            log_step("Tối ưu XGBoost", icon="🔍")
+            best_xgb = self.optimize_xgb(
+                n_trials=default_optuna['n_trials']['xgboost'],
+                timeout=default_optuna['timeout']['xgboost']
+            )
+            self.train_xgb(**best_xgb)
+        else:
+            self.train_xgb(**default_hyperparams['xgboost'])
+        
+        log_step("Đã hoàn tất huấn luyện tất cả mô hình!", icon="✅")
+        return self
+    
+    # ========== SAVE & LOAD MODELS ==========
+    def save_model(self, model_name: str, format: str = 'joblib') -> str:
+        """
+        Lưu mô hình vào file.
+        
+        Args:
+            model_name: Tên mô hình ('polynomial', 'random_forest', 'xgboost')
+            format: Định dạng ('joblib' hoặc 'pickle')
+            
+        Returns:
+            Đường dẫn file
+        """
+        if model_name not in self.models:
+            logger.error(f"❌ Không tìm thấy mô hình: {model_name}")
+            return None
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = self.output_dir / f"{model_name}_{timestamp}.{format}"
+        
+        model_data = self.models[model_name]
+        
+        if format == 'joblib':
+            joblib.dump(model_data, filename)
+        elif format == 'pickle':
+            with open(filename, 'wb') as f:
+                pickle.dump(model_data, f)
+        
+        log_step(f"Đã lưu mô hình: {filename}", icon="💾")
+        return str(filename)
+    
+    def load_model(self, filepath: str, model_name: str) -> None:
+        """
+        Tải mô hình từ file.
+        
+        Args:
+            filepath: Đường dẫn file
+            model_name: Tên mô hình để lưu
+        """
+        filepath = Path(filepath)
+        
+        if filepath.suffix == '.joblib':
+            model_data = joblib.load(filepath)
+        else:
+            with open(filepath, 'rb') as f:
+                model_data = pickle.load(f)
+        
+        self.models[model_name] = model_data
+        log_step(f"Đã tải mô hình: {filepath}", icon="📂")
+    
+    # ========== EVALUATION & COMPARISON ==========
+    def get_best_model(self) -> Tuple[str, Dict]:
+        """
+        Lấy mô hình tốt nhất dựa trên test R².
+        
+        Returns:
+            (model_name, results)
+        """
+        best_r2 = -np.inf
+        best_name = None
+        
+        for name, result in self.results.items():
+            if result['test_r2'] > best_r2:
+                best_r2 = result['test_r2']
+                best_name = name
+        
+        self.best_model_name = best_name
+        if best_name:
+            self.best_model = self.models[best_name]['model']
+        
+        return best_name, self.results[best_name] if best_name else None
+    
+    def save_results(self, filename: str = 'model_results.json') -> None:
+        """Lưu kết quả đánh giá ra file JSON."""
+        filepath = MODEL_RESULTS_DIR / filename
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Convert np types sang Python types
+        results_serializable = {}
+        for model_name, result in self.results.items():
+            results_serializable[model_name] = {
+                'train_rmse': float(result['train_rmse']),
+                'test_rmse': float(result['test_rmse']),
+                'test_mae': float(result['test_mae']),
+                'test_r2': float(result['test_r2']),
+                'hyperparams': result['hyperparams']
+            }
+        
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(results_serializable, f, indent=4, ensure_ascii=False)
+        
+        log_step(f"Đã lưu kết quả: {filepath}", icon="💾")
+    
+    def plot_comparison(self, metric: str = 'test_r2', save: bool = True) -> None:
+        """
+        Vẽ biểu đồ so sánh các mô hình.
+        
+        Args:
+            metric: Metric để so sánh ('test_r2', 'test_rmse', 'test_mae')
+            save: Có lưu biểu đồ không
+        """
+        if not self.results:
+            logger.warning("❌ Chưa có kết quả để vẽ biểu đồ")
+            return
+        
+        metric_values = {model: self.results[model][metric] for model in self.results}
+        if not metric_values:
+            logger.warning("❌ Không có kết quả để vẽ biểu đồ")
+            return
+
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / f'comparison_{metric}.png'
+        self.visualizer.plot_model_comparison(metric_values, metric, save_path=save_path, show=not save)
+    
+    def plot_predictions(self, model_name: str, save: bool = True) -> None:
+        """Vẽ biểu đồ actual vs predicted."""
+        if model_name not in self.models:
+            logger.error(f"❌ Không tìm thấy mô hình: {model_name}")
+            return
+        
+        model_obj = self.models[model_name]['model']
+        
+        # Xử lý đặc biệt cho Polynomial (đã được scaled)
+        if model_name == 'polynomial':
+            X_test_pred = self.X_test_transformed['polynomial']
+        else:
+            # RF và XGBoost dùng raw data
+            X_test_pred = self.X_test
+        
+        y_pred = model_obj.predict(X_test_pred)
+        
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / f'predictions_{model_name}.png'
+        self.visualizer.plot_regression_diagnostics(
+            y_true=self.y_test,
+            y_pred=y_pred,
+            model_name=model_name,
+            save_path=save_path,
+            show=not save,
+        )
+    
+    def plot_all_predictions(self, save: bool = True) -> None:
+        """Vẽ biểu đồ predictions cho tất cả các mô hình (riêng lẻ - deprecated)."""
+        log_section("VẼ BIỂU ĐỒ PREDICTIONS CHO TẤT CẢ MÔ HÌNH", icon="📈")
+        
+        for model_name in self.models.keys():
+            self.plot_predictions(model_name, save=save)
+    
+    def plot_combined_predictions(self, save: bool = True) -> None:
+        """Vẽ tất cả predictions trong 1 figure để so sánh."""
+        log_section("VẼ BIỂU ĐỒ PREDICTIONS TỔNG HỢP", icon="📈")
+        
+        predictions = {}
+        for model_name in self.models.keys():
+            model_obj = self.models[model_name]['model']
+            
+            # Xử lý đặc biệt cho Polynomial
+            if model_name == 'polynomial':
+                X_test_pred = self.X_test_transformed.get('polynomial', self.X_test)
+            else:
+                X_test_pred = self.X_test
+            
+            y_pred = model_obj.predict(X_test_pred)
+            predictions[model_name] = (self.y_test.values, y_pred)
+        
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / 'predictions_combined.png'
+        
+        self.visualizer.plot_combined_predictions(
+            predictions=predictions,
+            save_path=save_path,
+            show=not save,
+        )
+    
+    def plot_metrics_summary(self, save: bool = True) -> None:
+        """Vẽ biểu đồ tổng hợp tất cả metrics (R², RMSE, MAE) trong 1 figure."""
+        log_section("VẼ BIỂU ĐỒ METRICS TỔNG HỢP", icon="📊")
+        
+        if not self.results:
+            logger.warning("❌ Chưa có kết quả để vẽ biểu đồ")
+            return
+        
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / 'metrics_summary.png'
+        
+        self.visualizer.plot_metrics_summary(
+            results=self.results,
+            save_path=save_path,
+            show=not save,
+        )
+    
+    def summary(self) -> None:
+        """In ra tóm tắt kết quả các mô hình."""
+        log_section("TÓM TẮT KẾT QUẢ TRAINING", icon="📊")
+        
+        summary_data = []
+        for model_name, result in self.results.items():
+            summary_data.append({
+                'Model': model_name.upper(),
+                'Train RMSE': f"{result['train_rmse']:.6f}",
+                'Test RMSE': f"{result['test_rmse']:.6f}",
+                'Test MAE': f"{result['test_mae']:.6f}",
+                'Test R²': f"{result['test_r2']:.6f}"
+            })
+        
+        summary_df = pd.DataFrame(summary_data)
+        print(summary_df.to_string(index=False))
+        
+        best_name, best_result = self.get_best_model()
+        if best_name:
+            log_section("MÔ HÌNH TỐT NHẤT", icon="✨")
+            log_step(f"Model: {best_name.upper()}", icon="🏆")
+            log_metrics({"Test R²": best_result['test_r2'], "Test RMSE": best_result['test_rmse'], "Test MAE": best_result['test_mae']})
+
+        logger.info("%s\n", _divider())
+    
+    # ========== DATA PREPARATION ==========
+    @staticmethod
+    def prepare_data(df: pd.DataFrame, 
+                     target_col: str = 'Trip_Price',
+                     test_size: float = 0.2,
+                     random_state: int = 42,
+                     scale: bool = False) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+        """
+        Chia dữ liệu (KHÔNG scale - scale được thực hiện ở preprocessing).
+        
+        Args:
+            df: DataFrame chứa dữ liệu
+            target_col: Tên cột target
+            test_size: Tỷ lệ test set
+            random_state: Random seed
+            scale: DEPRECATED - Không nên scale ở đây, scale ở preprocessing
+            
+        Returns:
+            (X_train, X_test, y_train, y_test)
+        """
+        log_section("CHUẨN BỊ DỮ LIỆU CHO TRAINING", icon="🔄")
+        
+        # Tách Features và Target
+        X = df.drop(target_col, axis=1)
+        y = df[target_col]
+        
+        log_step(f"Total samples: {len(df)}, Features: {X.shape[1]}", icon="📦")
+        
+        # Chia Train/Test
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state
+        )
+        
+        log_step(f"Train set: {X_train.shape[0]}, Test set: {X_test.shape[0]}", icon="🔀")
+        
+        # Scale dữ liệu nếu cần (KHÔNG khuyến nghị)
+        if scale:
+            logger.warning("⚠️  scale=True không khuyến nghị - Nên scale ở preprocessing!")
+            scaler = StandardScaler()
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
+            
+            # Chuyển thành DataFrame
+            X_train = pd.DataFrame(X_train_scaled, columns=X.columns)
+            X_test = pd.DataFrame(X_test_scaled, columns=X.columns)
+            
+            log_step("Dữ liệu đã được chuẩn hóa (StandardScaler)", icon="✅")
+        
+        log_step(f"X_train shape: {X_train.shape}", icon="📊")
+        log_step(f"X_test shape: {X_test.shape}", icon="📊")
+        
+        return X_train, X_test, y_train, y_test
+    
+    # ========== SAVE ALL MODELS ==========
+    def save_all_models(self, format: str = 'joblib') -> Dict[str, str]:
+        """
+        Lưu tất cả các mô hình đã train và trả về đường dẫn tương ứng.
+
+        Args:
+            format: Định dạng ('joblib' hoặc 'pickle')
+
+        Returns:
+            Dict mapping tên mô hình -> đường dẫn file đã lưu
+        """
+        log_section("LƯU TẤT CẢ CÁC MÔ HÌNH", icon="💾")
+
+        saved_paths: Dict[str, str] = {}
+        for model_name in self.models.keys():
+            path = self.save_model(model_name, format=format)
+            if path:
+                saved_paths[model_name] = path
+
+        log_step(f"Hoàn tất lưu {len(saved_paths)} mô hình!", icon="✅")
+        return saved_paths
+    
+    def predict(self, X: pd.DataFrame, model_name: Optional[str] = None) -> np.ndarray:
+        """
+        Dự đoán với mô hình đã train.
+        
+        Args:
+            X: Features cần dự đoán
+            model_name: Tên mô hình (None = dùng best model)
+            
+        Returns:
+            Array predictions
+        """
+        if model_name is None:
+            if self.best_model_name is None:
+                self.get_best_model()
+            model_name = self.best_model_name
+        
+        if model_name not in self.models:
+            raise ValueError(f"Mô hình {model_name} chưa được train")
+        
+        model_obj = self.models[model_name]['model']
+        
+        # Xử lý cho Polynomial (cần transform lại với PolynomialFeatures)
+        if model_name == 'polynomial':
+            poly = self.models[model_name]['poly']
+            feature_subset = self.models[model_name].get('feature_subset')
+            X_input = X[feature_subset] if feature_subset else X
+            X_poly = poly.transform(X_input)
+            return model_obj.predict(X_poly)
+        
+        # Các model khác dùng X trực tiếp (đã scaled từ preprocessing)
+        return model_obj.predict(X)
+    
+    # ========== FEATURE IMPORTANCE ==========
+    def get_feature_importance(self, model_name: str, top_n: int = 10) -> pd.DataFrame:
+        """
+        Lấy feature importance của mô hình.
+        
+        Args:
+            model_name: Tên mô hình ('random_forest', 'xgboost')
+            top_n: Số lượng features quan trọng nhất
+            
+        Returns:
+            DataFrame chứa feature importance
+        """
+        if model_name not in self.models:
+            logger.error(f"❌ Mô hình {model_name} chưa được train")
+            return None
+        
+        if model_name == 'polynomial':
+            logger.warning("⚠️  Polynomial Regression không hỗ trợ feature importance")
+            return None
+        
+        model_obj = self.models[model_name]['model']
+        
+        # Lấy feature importance
+        if hasattr(model_obj, 'feature_importances_'):
+            importances = model_obj.feature_importances_
+            feature_names = self.X_train.columns
+            
+            # Tạo DataFrame
+            importance_df = pd.DataFrame({
+                'feature': feature_names,
+                'importance': importances
+            }).sort_values('importance', ascending=False).head(top_n)
+            
+            return importance_df
+        else:
+            logger.warning(f"⚠️  Mô hình {model_name} không hỗ trợ feature importance")
+            return None
+    
+    def plot_feature_importance(self, model_name: str, top_n: int = 15, save: bool = True) -> None:
+        """
+        Vẽ biểu đồ feature importance.
+        
+        Args:
+            model_name: Tên mô hình
+            top_n: Số lượng features hiển thị
+            save: Có lưu biểu đồ không
+        """
+        importance_df = self.get_feature_importance(model_name, top_n=top_n)
+        
+        if importance_df is None:
+            return
+        
+        logger.info(f"\n📊 Feature Importance - {model_name.upper()}")
+        logger.info(f"{'='*70}")
+        print(importance_df.to_string(index=False))
+        
+        # Vẽ biểu đồ
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / f'feature_importance_{model_name}.png'
+        self.visualizer.plot_feature_importance(
+            importance_df=importance_df,
+            model_name=model_name,
+            save_path=save_path,
+            top_n=top_n,
+            show=not save,
+        )
+    
+    def plot_all_feature_importance(self, top_n: int = 15, save: bool = True) -> None:
+        """Vẽ feature importance cho tất cả mô hình hỗ trợ (bỏ qua Polynomial)."""
+        log_section("VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH", icon="📊")
+        
+        # Lọc các models hỗ trợ feature importance
+        supported_models = [m for m in self.models.keys() if m != 'polynomial']
+        
+        if not supported_models:
+            logger.warning("⚠️  Không có mô hình nào hỗ trợ feature importance (chỉ có Polynomial)")
+            return
+        
+        for model_name in supported_models:
+            self.plot_feature_importance(model_name, top_n=top_n, save=save)
+    
+    def compare_feature_importance(self, top_n: int = 10, save: bool = True) -> None:
+        """
+        So sánh feature importance giữa các mô hình (bỏ qua Polynomial).
+        
+        Args:
+            top_n: Số features hiển thị
+            save: Có lưu biểu đồ không
+        """
+        log_section("SO SÁNH FEATURE IMPORTANCE GIỮA CÁC MÔ HÌNH", icon="📊")
+        
+        # Lấy feature importance từ các mô hình tree-based
+        importances = {}
+        for model_name in ['random_forest', 'extra_trees', 'xgboost']:
+            if model_name in self.models:
+                imp_df = self.get_feature_importance(model_name, top_n=top_n)
+                if imp_df is not None:
+                    importances[model_name] = imp_df
+        
+        if len(importances) == 0:
+            logger.warning("⚠️  Không có mô hình nào hỗ trợ feature importance để so sánh")
+            return
+        
+        if len(importances) == 1:
+            logger.warning(f"⚠️  Chỉ có 1 mô hình ({list(importances.keys())[0]}), cần ít nhất 2 để so sánh")
+            logger.info(f"💡 Sử dụng plot_feature_importance('{list(importances.keys())[0]}') để vẽ riêng")
+            return
+        
+        # Vẽ biểu đồ so sánh
+        save_path = None
+        if save:
+            save_path = MODEL_RESULTS_DIR / 'feature_importance_comparison.png'
+        self.visualizer.plot_feature_importance_comparison(
+            importances=importances,
+            save_path=save_path,
+            top_n=top_n,
+            show=not save,
+        )
