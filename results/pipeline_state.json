@@ -1,5 +1,5 @@
 {
-    "generated_at": "2025-12-05T17:57:25.367010+07:00",
+    "generated_at": "2025-12-07T15:22:42.032272+07:00",
     "transformer": {
         "path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\data_transformer.joblib",
         "target_column": "Trip_Price",
@@ -9,28 +9,27 @@
         "polynomial": {
             "path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\polynomial.joblib",
             "metrics": {
-                "train_rmse": 11.197717099036717,
-                "test_rmse": 13.915597691856169,
-                "test_mae": 8.638144634012765,
-                "test_r2": 0.9171534136593862
+                "train_rmse": 14.638658736744988,
+                "test_rmse": 13.580725597575633,
+                "test_mae": 10.706286582751735,
+                "test_r2": 0.8365255862861563
             },
             "hyperparams": {
                 "degree": 3,
                 "alpha": 1.0,
                 "feature_subset": [
                     "Trip_Distance_km",
-                    "Per_Km_Rate",
-                    "Trip_Duration_Minutes"
+                    "Per_Km_Rate"
                 ]
             }
         },
         "random_forest": {
             "path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\random_forest.joblib",
             "metrics": {
-                "train_rmse": 5.092568714032467,
-                "test_rmse": 11.950668005274947,
-                "test_mae": 6.268112201003554,
-                "test_r2": 0.9388980243974094
+                "train_rmse": 4.894337238024371,
+                "test_rmse": 7.776202808260318,
+                "test_mae": 4.94150438446827,
+                "test_r2": 0.9464031831484241
             },
             "hyperparams": {
                 "n_estimators": 100,
@@ -42,10 +41,10 @@
         "extra_trees": {
             "path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\extra_trees.joblib",
             "metrics": {
-                "train_rmse": 1.5186455515537618,
-                "test_rmse": 10.478630146354881,
-                "test_mae": 5.7156471459831915,
-                "test_r2": 0.9530235804481791
+                "train_rmse": 1.190163510876013,
+                "test_rmse": 7.706311332146385,
+                "test_mae": 4.595850977197675,
+                "test_r2": 0.9473622956198454
             },
             "hyperparams": {
                 "n_estimators": 200,
@@ -57,10 +56,10 @@
         "xgboost": {
             "path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\xgboost.joblib",
             "metrics": {
-                "train_rmse": 6.549644727067225,
-                "test_rmse": 16.384479369624998,
-                "test_mae": 6.654243130944394,
-                "test_r2": 0.8851486297827768
+                "train_rmse": 6.2338076229957515,
+                "test_rmse": 6.770622210755532,
+                "test_mae": 4.357163170560017,
+                "test_r2": 0.9593686733084155
             },
             "hyperparams": {
                 "max_depth": 4,
@@ -77,11 +76,11 @@
             }
         }
     },
-    "best_model": "extra_trees",
-    "best_model_path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\extra_trees.joblib",
+    "best_model": "xgboost",
+    "best_model_path": "D:\\Nhập môn Python\\Đồ án cuối kì\\Do_An_Python\\models\\xgboost.joblib",
     "best_metrics": {
-        "test_rmse": 10.478630146354881,
-        "test_mae": 5.7156471459831915,
-        "test_r2": 0.9530235804481791
+        "test_rmse": 6.770622210755532,
+        "test_mae": 4.357163170560017,
+        "test_r2": 0.9593686733084155
     }
 }

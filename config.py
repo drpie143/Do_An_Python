@@ -85,23 +85,23 @@ CONSTRAINT_RULES = {
         "dtype": "float",
         "action": "clip",
     },
-    # 4. Base fare cannot be negative; convert violations to NaN for imputation
+    # 4. Base fare cannot be negative; clip to 0 (minor data error, can be corrected)
     "Base_Fare": {
         "min": 0.0,
         "dtype": "float",
-        "action": "mean",
+        "action": "clip",  # Clip về 0 thay vì drop
     },
-    # 5. Distance-based rate must be non-negative
+    # 5. Distance-based rate must be non-negative; drop invalid rows (serious error)
     "Per_Km_Rate": {
         "min": 0.0,
         "dtype": "float",
-        "action": "mean",
+        "action": "drop",  # Drop vì giá âm là lỗi nghiêm trọng
     },
-    # 6. Time-based rate must be non-negative
+    # 6. Time-based rate must be non-negative; drop invalid rows (serious error)
     "Per_Minute_Rate": {
         "min": 0.0,
         "dtype": "float",
-        "action": "mean",
+        "action": "drop",  # Drop vì giá âm là lỗi nghiêm trọng
     },
     # 7. Target price cannot be negative; drop invalid rows to avoid corrupt training
     "Trip_Price": {

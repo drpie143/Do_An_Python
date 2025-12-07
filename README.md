@@ -298,16 +298,16 @@ trainer.compare_feature_importance(top_n=10, save=True)
 
 | Model              | Train RMSE | Test RMSE | Test MAE | Test R²   |
 | ------------------ | ---------- | --------- | -------- | --------- |
-| Polynomial         | 11.20      | 13.92     | 8.64     | 0.917     |
-| Random Forest      | 5.09       | 11.95     | 6.27     | 0.939     |
-| **Extra Trees** ⭐ | 1.52       | **10.48** | **5.72** | **0.953** |
-| XGBoost            | 6.63       | 16.27     | 6.47     | 0.887     |
+| Polynomial         | 14.64      | 13.58     | 10.71    | 0.837     |
+| Random Forest      | 4.89       | 7.78      | 4.94     | 0.946     |
+| Extra Trees        | 1.19       | 7.71      | 4.60     | 0.947     |
+| **XGBoost** ⭐     | **6.23**   | **6.77**  | **4.36** | **0.959** |
 
-### Mô hình tốt nhất: **Extra Trees**
+### Mô hình tốt nhất: **XGBoost**
 
-- Test R²: **0.953** (giải thích 95.3% phương sai)
-- Test RMSE: **10.48**
-- Test MAE: **5.72**
+- Test R²: **0.959** (giải thích 95.9% phương sai)
+- Test RMSE: **6.77**
+- Test MAE: **4.36**
 
 ### Biểu đồ EDA (6 files trong results/eda/):
 
