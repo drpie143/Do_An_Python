@@ -1,12 +1,12 @@
 {
     "polynomial": {
-        "train_rmse": 14.638658736744988,
-        "test_rmse": 13.580725597575633,
-        "test_mae": 10.706286582751735,
-        "test_r2": 0.8365255862861563,
+        "train_rmse": 15.395773948480139,
+        "test_rmse": 14.054468681170965,
+        "test_mae": 10.939616367122579,
+        "test_r2": 0.8249215455540776,
         "hyperparams": {
-            "degree": 3,
-            "alpha": 1.0,
+            "degree": 2,
+            "alpha": 7.579479953348009,
             "feature_subset": [
                 "Trip_Distance_km",
                 "Per_Km_Rate"
@@ -14,44 +14,44 @@
         }
     },
     "random_forest": {
-        "train_rmse": 4.894337238024371,
-        "test_rmse": 7.776202808260318,
-        "test_mae": 4.94150438446827,
-        "test_r2": 0.9464031831484241,
+        "train_rmse": 4.474932447233198,
+        "test_rmse": 7.806602416771464,
+        "test_mae": 5.024481179365697,
+        "test_r2": 0.9459833106077822,
         "hyperparams": {
-            "n_estimators": 100,
+            "n_estimators": 290,
             "max_depth": 10,
+            "min_samples_split": 5,
+            "min_samples_leaf": 1
+        }
+    },
+    "extra_trees": {
+        "train_rmse": 3.5122936604749344,
+        "test_rmse": 8.167517376661232,
+        "test_mae": 4.7581118955951,
+        "test_r2": 0.9408732545920818,
+        "hyperparams": {
+            "n_estimators": 126,
+            "max_depth": 13,
             "min_samples_split": 5,
             "min_samples_leaf": 2
         }
     },
-    "extra_trees": {
-        "train_rmse": 1.190163510876013,
-        "test_rmse": 7.706311332146385,
-        "test_mae": 4.595850977197675,
-        "test_r2": 0.9473622956198454,
-        "hyperparams": {
-            "n_estimators": 200,
-            "max_depth": 12,
-            "min_samples_split": 2,
-            "min_samples_leaf": 1
-        }
-    },
     "xgboost": {
-        "train_rmse": 6.2338076229957515,
-        "test_rmse": 6.770622210755532,
-        "test_mae": 4.357163170560017,
-        "test_r2": 0.9593686733084155,
+        "train_rmse": 3.6701818929767285,
+        "test_rmse": 6.668622679390362,
+        "test_mae": 3.975838211777551,
+        "test_r2": 0.9605836750042518,
         "hyperparams": {
-            "max_depth": 4,
-            "learning_rate": 0.05,
-            "n_estimators": 150,
-            "subsample": 0.7,
-            "colsample_bytree": 0.7,
-            "min_child_weight": 5,
-            "gamma": 0.1,
-            "reg_lambda": 1.0,
-            "reg_alpha": 0.5,
+            "max_depth": 5,
+            "learning_rate": 0.019434277714494578,
+            "n_estimators": 337,
+            "subsample": 0.6432635459418835,
+            "colsample_bytree": 0.8596878333903372,
+            "min_child_weight": 2,
+            "gamma": 0.8684330334280612,
+            "reg_lambda": 0.34817508259899915,
+            "reg_alpha": 0.35107442954920937,
             "random_state": 42,
             "n_jobs": -1
         }

@@ -178,6 +178,9 @@ def preprocess_data(
         scaler_type=config.SCALING_METHOD,
         encoder_type=config.ENCODING_METHOD,
     )
+    
+    # Truyền constraint rules để áp dụng khi transform data mới (predict)
+    transformer.constraint_rules = config.CONSTRAINT_RULES
 
     train_processed = transformer.fit_transform(
         target_col=config.TARGET_COLUMN,
