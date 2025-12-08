@@ -136,14 +136,12 @@ RANDOM_SEED = 42
 
 # Optuna optimization
 OPTUNA_N_TRIALS = {
-    'polynomial': 10,
     'random_forest': 20,
     'extra_trees': 20,
     'xgboost': 30
 }
 
 OPTUNA_TIMEOUT = {
-    'polynomial': 300,      # 5 phút
     'random_forest': 600,   # 10 phút
     'extra_trees': 600,     # 10 phút
     'xgboost': 900          # 15 phút
@@ -151,10 +149,6 @@ OPTUNA_TIMEOUT = {
 
 # Hyperparameters mặc định (nếu không dùng optimization)
 DEFAULT_HYPERPARAMS = {
-    'polynomial': {
-        'degree': 3,
-        'alpha': 1.0
-    },
     'random_forest': {
         'n_estimators': 100,
         'max_depth': 10,
@@ -192,9 +186,6 @@ LOG_FILE = PROJECT_ROOT / 'training.log'
 PLOT_DPI = 300
 PLOT_STYLE = 'seaborn-v0_8-darkgrid'
 FIGURE_SIZE = (10, 6)
-
-# ========== FEATURE SELECTION ==========
-POLY_CORRELATION_THRESHOLD = 0.3
 
 # ========== FEATURE ENGINEERING ==========
 CREATE_INTERACTION_FEATURES = False

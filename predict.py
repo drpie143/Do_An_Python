@@ -48,7 +48,6 @@ logger = logging.getLogger(__name__)
 
 # Model names mapping
 MODEL_NAMES = {
-    'polynomial': 'Polynomial Regression',
     'random_forest': 'Random Forest',
     'extra_trees': 'Extra Trees',
     'xgboost': 'XGBoost',
@@ -118,7 +117,7 @@ def prepare_input_data(
 def predict_from_file(
     input_path: str,
     output_path: Optional[str] = None,
-    model_name: str = "polynomial"
+    model_name: str = "xgboost"
 ) -> pd.DataFrame:
     """Dự đoán từ file CSV."""
     # Load data
@@ -162,7 +161,7 @@ def predict_from_file(
     return result
 
 
-def interactive_predict(model_name: str = "polynomial") -> None:
+def interactive_predict(model_name: str = "xgboost") -> None:
     """Chế độ dự đoán interactive."""
     print("\n" + "="*60)
     print(" TAXI PRICE PREDICTION - INTERACTIVE MODE")
@@ -318,9 +317,9 @@ Ví dụ:
     parser.add_argument(
         '--model', '-m',
         type=str,
-        default='polynomial',
+        default='xgboost',
         choices=list(MODEL_NAMES.keys()),
-        help='Model sử dụng để dự đoán (default: polynomial)'
+        help='Model sử dụng để dự đoán (default: xgboost)'
     )
     
     parser.add_argument(

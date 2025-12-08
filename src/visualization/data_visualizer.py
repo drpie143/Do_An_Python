@@ -763,13 +763,27 @@ class DataVisualizer:
             return
         
         n_models = len(predictions)
-        n_cols = min(n_models, 2)
-        n_rows = (n_models + n_cols - 1) // n_cols
         
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(7 * n_cols, 6 * n_rows))
-        if n_models == 1:
-            axes = np.array([axes])
-        axes = axes.flatten()
+        # Special layout for 3 models: 2 on top, 1 centered at bottom (same size)
+        if n_models == 3:
+            fig = plt.figure(figsize=(14, 12))
+            # Use GridSpec for precise control
+            import matplotlib.gridspec as gridspec
+            gs = gridspec.GridSpec(2, 4, figure=fig, hspace=0.3, wspace=0.3)
+            # Top row: 2 subplots (each spans 2 columns)
+            ax1 = fig.add_subplot(gs[0, 0:2])
+            ax2 = fig.add_subplot(gs[0, 2:4])
+            # Bottom row: 1 subplot centered (spans middle 2 columns)
+            ax3 = fig.add_subplot(gs[1, 1:3])
+            axes = [ax1, ax2, ax3]
+        else:
+            n_cols = min(n_models, 2)
+            n_rows = (n_models + n_cols - 1) // n_cols
+            
+            fig, axes = plt.subplots(n_rows, n_cols, figsize=(7 * n_cols, 6 * n_rows))
+            if n_models == 1:
+                axes = np.array([axes])
+            axes = np.array(axes).flatten()
         
         colors = ['#3498db', '#e74c3c', '#2ecc71', '#9b59b6']
         

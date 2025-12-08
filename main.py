@@ -193,13 +193,6 @@ def preprocess_data(
         interaction_pairs=config.INTERACTION_PAIRS if config.CREATE_INTERACTION_FEATURES else None,
     )
 
-    # Chọn features cho Polynomial Regression (dùng method có sẵn)
-    poly_feature_subset = transformer.get_correlated_features(
-        target_col=config.TARGET_COLUMN,
-        threshold=config.POLY_CORRELATION_THRESHOLD,
-        method='spearman'
-    ) or None
-
     transformer.print_summary()
 
     # ========================================================================
@@ -223,7 +216,7 @@ def preprocess_data(
     X_test = test_processed.drop(columns=[config.TARGET_COLUMN])
     y_test = test_processed[config.TARGET_COLUMN]
 
-    return (X_train, X_test, y_train, y_test, poly_feature_subset, transformer)
+    return (X_train, X_test, y_train, y_test, transformer)
 
 
 def train_models(
@@ -232,7 +225,6 @@ def train_models(
     y_train: pd.Series,
     y_test: pd.Series,
     optimize: bool = False,
-    poly_feature_subset: Optional[List[str]] = None,
 ) -> ModelTrainer:
     """Huấn luyện các mô hình học máy."""
     log_section("BƯỚC 2: HUẤN LUYỆN MÔ HÌNH", icon="🤖")
@@ -248,7 +240,6 @@ def train_models(
     # Sử dụng train_all() để huấn luyện tất cả models
     trainer.train_all(
         optimize=optimize,
-        poly_feature_subset=poly_feature_subset,
         hyperparams=config.DEFAULT_HYPERPARAMS,
         optuna_config={
             'n_trials': config.OPTUNA_N_TRIALS,
@@ -372,7 +363,7 @@ def main():
         # Bước 1: Tiền xử lý
         step_start = time.perf_counter()
         (X_train, X_test, y_train, y_test, 
-         poly_feature_subset, transformer) = preprocess_data(generate_viz=not args.no_viz)
+         transformer) = preprocess_data(generate_viz=not args.no_viz)
         stage_times.append(("preprocess", time.perf_counter() - step_start))
         
         # Bước 2: Training
@@ -382,8 +373,7 @@ def main():
             X_test,
             y_train,
             y_test,
-            optimize=args.optimize,
-            poly_feature_subset=poly_feature_subset
+            optimize=args.optimize
         )
         stage_times.append(("train", time.perf_counter() - step_start))
         

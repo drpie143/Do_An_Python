@@ -27,7 +27,7 @@ from sklearn.preprocessing import StandardScaler
 
 from src.modeling.base_trainer import log_section, log_step, log_metrics, _divider
 from src.modeling.model_registry import (
-    PolynomialTrainer, RandomForestTrainer, ExtraTreesTrainer, XGBoostTrainer,
+    RandomForestTrainer, ExtraTreesTrainer, XGBoostTrainer,
     get_trainer, TRAINER_REGISTRY
 )
 from src.visualization import DataVisualizer
@@ -42,7 +42,7 @@ class ModelTrainer:
     Orchestrator cho việc huấn luyện và quản lý nhiều mô hình học máy.
     
     Hỗ trợ:
-    - 4 mô hình: Polynomial Regression, Random Forest, Extra Trees, XGBoost
+    - 3 mô hình: Random Forest, Extra Trees, XGBoost
     - Tối ưu hyperparameters bằng Optuna
     - Logging quá trình huấn luyện
     - Lưu/tải mô hình
@@ -133,24 +133,6 @@ class ModelTrainer:
         self.models[name] = trainer.get_model_data()
         self.results[name] = trainer.get_result()
         self.optimization_history[name] = trainer.optimization_history
-        
-        # Xử lý đặc biệt cho Polynomial
-        if name == 'polynomial' and hasattr(trainer, 'X_train_transformed'):
-            self.X_train_transformed[name] = trainer.X_train_transformed
-            self.X_test_transformed[name] = trainer.X_test_transformed
-    
-    # ========== POLYNOMIAL REGRESSION ==========
-    def optimize_polynomial(self, n_trials: int = 10, timeout: int = 300) -> Dict:
-        """Tối ưu hyperparameters cho Polynomial Regression."""
-        trainer = self._get_trainer('polynomial')
-        return trainer.optimize(n_trials=n_trials, timeout=timeout)
-    
-    def train_polynomial(self, degree: int = 3, alpha: float = 1.0,
-                         feature_subset: Optional[List[str]] = None) -> None:
-        """Huấn luyện Polynomial Regression."""
-        trainer = self._get_trainer('polynomial')
-        trainer.train(degree=degree, alpha=alpha, feature_subset=feature_subset)
-        self._sync_trainer_results('polynomial', trainer)
     
     # ========== RANDOM FOREST ==========
     def optimize_rf(self, n_trials: int = 20, timeout: int = 600) -> Dict:
@@ -204,7 +186,6 @@ class ModelTrainer:
     def train_all(
         self,
         optimize: bool = False,
-        poly_feature_subset: Optional[List[str]] = None,
         hyperparams: Optional[Dict[str, Dict]] = None,
         optuna_config: Optional[Dict[str, Dict]] = None,
     ) -> "ModelTrainer":
@@ -213,7 +194,6 @@ class ModelTrainer:
         
         Args:
             optimize: Có tối ưu hyperparameters với Optuna không
-            poly_feature_subset: Danh sách features cho Polynomial Regression
             hyperparams: Dict chứa hyperparameters mặc định cho từng model
             optuna_config: Dict chứa cấu hình Optuna (n_trials, timeout)
             
@@ -224,7 +204,6 @@ class ModelTrainer:
         
         # Default hyperparams
         default_hyperparams = {
-            'polynomial': {'degree': 3, 'alpha': 1.0},
             'random_forest': {'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5, 'min_samples_leaf': 2},
             'extra_trees': {'n_estimators': 200, 'max_depth': 12, 'min_samples_split': 2, 'min_samples_leaf': 1},
             'xgboost': {'max_depth': 4, 'learning_rate': 0.05, 'n_estimators': 150, 'subsample': 0.7},
@@ -235,33 +214,14 @@ class ModelTrainer:
         
         # Default Optuna config
         default_optuna = {
-            'n_trials': {'polynomial': 10, 'random_forest': 20, 'extra_trees': 20, 'xgboost': 30},
-            'timeout': {'polynomial': 300, 'random_forest': 600, 'extra_trees': 600, 'xgboost': 900},
+            'n_trials': {'random_forest': 20, 'extra_trees': 20, 'xgboost': 30},
+            'timeout': {'random_forest': 600, 'extra_trees': 600, 'xgboost': 900},
         }
         if optuna_config:
             for key in optuna_config:
                 default_optuna[key] = optuna_config[key]
         
-        # 1. Polynomial Regression
-        if optimize:
-            log_step("Tối ưu Polynomial Regression", icon="🔍")
-            best_poly = self.optimize_polynomial(
-                n_trials=default_optuna['n_trials']['polynomial'],
-                timeout=default_optuna['timeout']['polynomial']
-            )
-            self.train_polynomial(
-                degree=best_poly.get('degree', default_hyperparams['polynomial']['degree']),
-                alpha=best_poly.get('alpha', default_hyperparams['polynomial']['alpha']),
-                feature_subset=poly_feature_subset
-            )
-        else:
-            self.train_polynomial(
-                degree=default_hyperparams['polynomial']['degree'],
-                alpha=default_hyperparams['polynomial']['alpha'],
-                feature_subset=poly_feature_subset
-            )
-        
-        # 2. Random Forest
+        # 1. Random Forest
         if optimize:
             log_step("Tối ưu Random Forest", icon="🔍")
             best_rf = self.optimize_rf(
@@ -272,7 +232,7 @@ class ModelTrainer:
         else:
             self.train_rf(**default_hyperparams['random_forest'])
         
-        # 3. Extra Trees
+        # 2. Extra Trees
         if optimize:
             log_step("Tối ưu Extra Trees", icon="🔍")
             best_et = self.optimize_extra_trees(
@@ -283,7 +243,7 @@ class ModelTrainer:
         else:
             self.train_extra_trees(**default_hyperparams['extra_trees'])
         
-        # 4. XGBoost
+        # 3. XGBoost
         if optimize:
             log_step("Tối ưu XGBoost", icon="🔍")
             best_xgb = self.optimize_xgb(
@@ -442,15 +402,6 @@ class ModelTrainer:
             raise ValueError(f"Mô hình {model_name} chưa được train")
         
         model_obj = self.models[model_name]['model']
-        
-        # Xử lý cho Polynomial
-        if model_name == 'polynomial':
-            poly = self.models[model_name]['poly']
-            feature_subset = self.models[model_name].get('feature_subset')
-            X_input = X[feature_subset] if feature_subset else X
-            X_poly = poly.transform(X_input)
-            return model_obj.predict(X_poly)
-        
         return model_obj.predict(X)
     
     # ========== VISUALIZATION ==========
@@ -477,13 +428,7 @@ class ModelTrainer:
             return
         
         model_obj = self.models[model_name]['model']
-        
-        if model_name == 'polynomial':
-            X_test_pred = self.X_test_transformed['polynomial']
-        else:
-            X_test_pred = self.X_test
-        
-        y_pred = model_obj.predict(X_test_pred)
+        y_pred = model_obj.predict(self.X_test)
         
         save_path = None
         if save:
@@ -510,13 +455,7 @@ class ModelTrainer:
         predictions = {}
         for model_name in self.models.keys():
             model_obj = self.models[model_name]['model']
-            
-            if model_name == 'polynomial':
-                X_test_pred = self.X_test_transformed.get('polynomial', self.X_test)
-            else:
-                X_test_pred = self.X_test
-            
-            y_pred = model_obj.predict(X_test_pred)
+            y_pred = model_obj.predict(self.X_test)
             predictions[model_name] = (self.y_test.values, y_pred)
         
         save_path = None
@@ -552,10 +491,6 @@ class ModelTrainer:
         """Lấy feature importance của mô hình."""
         if model_name not in self.models:
             logger.error(f"❌ Mô hình {model_name} chưa được train")
-            return None
-        
-        if model_name == 'polynomial':
-            logger.warning("⚠️  Polynomial Regression không hỗ trợ feature importance")
             return None
         
         model_obj = self.models[model_name]['model']
@@ -600,7 +535,7 @@ class ModelTrainer:
         """Vẽ feature importance cho tất cả mô hình hỗ trợ."""
         log_section("VẼ FEATURE IMPORTANCE CHO TẤT CẢ MÔ HÌNH", icon="📊")
         
-        supported_models = [m for m in self.models.keys() if m != 'polynomial']
+        supported_models = list(self.models.keys())
         
         if not supported_models:
             logger.warning("⚠️  Không có mô hình nào hỗ trợ feature importance")

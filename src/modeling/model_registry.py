@@ -2,7 +2,6 @@
 Model Registry - Chứa các Trainer cụ thể cho từng loại mô hình.
 
 Bao gồm:
-- PolynomialTrainer: Polynomial Regression với Ridge
 - RandomForestTrainer: Random Forest Regressor
 - ExtraTreesTrainer: Extra Trees Regressor
 - XGBoostTrainer: XGBoost Regressor
@@ -14,7 +13,6 @@ from typing import Dict, List, Optional, Any
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
@@ -26,155 +24,6 @@ import optuna
 from src.modeling.base_trainer import (
     BaseTrainer, log_section, log_step, log_metrics, logger
 )
-
-
-# ========== POLYNOMIAL REGRESSION TRAINER ==========
-class PolynomialTrainer(BaseTrainer):
-    """Trainer cho Polynomial Regression với Ridge regularization."""
-    
-    @property
-    def model_name(self) -> str:
-        return 'polynomial'
-    
-    def _objective(self, trial: optuna.Trial) -> float:
-        """Objective function cho Polynomial Regression optimization."""
-        degree = trial.suggest_int('degree', 2, 5)
-        alpha = trial.suggest_float('alpha', 1e-3, 10, log=True)
-        
-        pipeline = Pipeline([
-            ('poly', PolynomialFeatures(degree=degree, include_bias=False)),
-            ('regressor', Ridge(alpha=alpha))
-        ])
-        
-        cv_scores = cross_val_score(
-            pipeline,
-            self.X_train,
-            self.y_train,
-            cv=5,
-            scoring='neg_mean_squared_error',
-            n_jobs=-1
-        )
-        rmse = np.sqrt(-cv_scores.mean())
-        return rmse
-    
-    def optimize(self, n_trials: int = 10, timeout: int = 300) -> Dict:
-        """Tối ưu hyperparameters cho Polynomial Regression."""
-        log_section("TỐI ƯU POLYNOMIAL REGRESSION", icon="🔍")
-        
-        study = self._create_optuna_study()
-        study.optimize(
-            self._objective,
-            n_trials=n_trials,
-            timeout=timeout,
-            show_progress_bar=True
-        )
-        
-        best_params = study.best_params
-        log_step(f"Best params: {best_params}", icon="✅")
-        log_metrics({"Best RMSE": study.best_value})
-        
-        self.optimization_history = {
-            'best_params': best_params,
-            'best_value': study.best_value,
-            'n_trials': len(study.trials)
-        }
-        return best_params
-    
-    def train(self, degree: int = 3, alpha: float = 1.0,
-              feature_subset: Optional[List[str]] = None) -> None:
-        """
-        Huấn luyện Polynomial Regression.
-        
-        Args:
-            degree: Bậc của polynomial
-            alpha: Hệ số regularization cho Ridge
-            feature_subset: Danh sách features sử dụng (None = tất cả)
-        """
-        start_time = time.perf_counter()
-        log_section("TRAINING POLYNOMIAL REGRESSION", icon="📊")
-        log_step(f"degree={degree}, alpha={alpha}")
-        
-        # Xử lý feature subset
-        if feature_subset:
-            valid_features = [col for col in feature_subset if col in self.X_train.columns]
-            missing = [col for col in feature_subset if col not in self.X_train.columns]
-            if missing:
-                logger.warning(f"⚠️  Các feature không tồn tại và sẽ bị bỏ qua: {missing}")
-            if not valid_features:
-                logger.warning("⚠️  Không còn feature hợp lệ sau khi lọc. Sử dụng toàn bộ features.")
-                feature_subset = None
-            else:
-                feature_subset = valid_features
-                log_step(f"Sử dụng {len(feature_subset)} feature có |corr| >= threshold", icon="📌")
-                log_step(f"Features: {feature_subset}", icon="🧮")
-        
-        # Chuẩn bị dữ liệu
-        base_X_train = self.X_train[feature_subset] if feature_subset else self.X_train
-        base_X_test = self.X_test[feature_subset] if feature_subset else self.X_test
-        
-        # Tạo polynomial features
-        poly = PolynomialFeatures(degree=degree, include_bias=False)
-        X_train_poly = poly.fit_transform(base_X_train)
-        X_test_poly = poly.transform(base_X_test)
-        
-        log_step(f"Original features: {self.X_train.shape[1]}", icon="📊")
-        log_step(f"Polynomial features: {X_train_poly.shape[1]}", icon="🧱")
-        
-        # Train model
-        model = Ridge(alpha=alpha)
-        model.fit(X_train_poly, self.y_train)
-        
-        # Evaluate
-        y_pred_train = model.predict(X_train_poly)
-        y_pred_test = model.predict(X_test_poly)
-        
-        train_metrics = self.evaluate(self.y_train, y_pred_train, prefix='train')
-        test_metrics = self.evaluate(self.y_test, y_pred_test, prefix='test')
-        
-        # Lưu model và kết quả
-        self.model = model
-        self.model_data = {
-            'model': model,
-            'poly': poly,
-            'feature_subset': feature_subset
-        }
-        
-        # Lưu thêm transformed data để dùng cho prediction
-        self.X_train_transformed = X_train_poly
-        self.X_test_transformed = X_test_poly
-        
-        self.result = {
-            'train_rmse': train_metrics['train_rmse'],
-            'test_rmse': test_metrics['test_rmse'],
-            'test_mae': test_metrics['test_mae'],
-            'test_r2': test_metrics['test_r2'],
-            'hyperparams': {
-                'degree': degree,
-                'alpha': alpha,
-                'feature_subset': feature_subset if feature_subset else 'all'
-            }
-        }
-        
-        log_metrics({
-            "Train RMSE": train_metrics['train_rmse'],
-            "Test RMSE": test_metrics['test_rmse'],
-            "Test MAE": test_metrics['test_mae'],
-            "Test R²": test_metrics['test_r2'],
-        })
-        log_step(f"Thời gian train: {time.perf_counter() - start_time:.2f} giây", icon="⏱️")
-    
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        """Dự đoán với Polynomial model (cần transform features)."""
-        if self.model is None:
-            raise ValueError("Mô hình Polynomial chưa được train")
-        
-        poly = self.model_data['poly']
-        feature_subset = self.model_data.get('feature_subset')
-        
-        X_input = X[feature_subset] if feature_subset else X
-        X_poly = poly.transform(X_input)
-        
-        return self.model.predict(X_poly)
 
 
 # ========== RANDOM FOREST TRAINER ==========
@@ -505,7 +354,6 @@ class XGBoostTrainer(BaseTrainer):
 
 # ========== TRAINER REGISTRY ==========
 TRAINER_REGISTRY = {
-    'polynomial': PolynomialTrainer,
     'random_forest': RandomForestTrainer,
     'extra_trees': ExtraTreesTrainer,
     'xgboost': XGBoostTrainer,
@@ -518,7 +366,7 @@ def get_trainer(name: str, X_train: pd.DataFrame, X_test: pd.DataFrame,
     Factory function để tạo trainer theo tên.
     
     Args:
-        name: Tên mô hình ('polynomial', 'random_forest', 'extra_trees', 'xgboost')
+        name: Tên mô hình ('random_forest', 'extra_trees', 'xgboost')
         X_train, X_test: Features
         y_train, y_test: Target
         

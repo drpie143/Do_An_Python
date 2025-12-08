@@ -1,34 +1,17 @@
 {
-    "generated_at": "2025-12-07T16:19:46.599981+07:00",
+    "generated_at": "2025-12-08T10:22:23.535298+07:00",
     "transformer": {
         "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\data_transformer.joblib",
         "target_column": "Trip_Price",
         "n_features": 18
     },
     "models": {
-        "polynomial": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\polynomial.joblib",
-            "metrics": {
-                "train_rmse": 15.395773948480139,
-                "test_rmse": 14.054468681170965,
-                "test_mae": 10.939616367122579,
-                "test_r2": 0.8249215455540776
-            },
-            "hyperparams": {
-                "degree": 2,
-                "alpha": 7.579479953348009,
-                "feature_subset": [
-                    "Trip_Distance_km",
-                    "Per_Km_Rate"
-                ]
-            }
-        },
         "random_forest": {
             "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\random_forest.joblib",
             "metrics": {
                 "train_rmse": 4.474932447233198,
-                "test_rmse": 7.806602416771464,
-                "test_mae": 5.024481179365697,
+                "test_rmse": 7.806602416771463,
+                "test_mae": 5.024481179365696,
                 "test_r2": 0.9459833106077822
             },
             "hyperparams": {
@@ -41,10 +24,10 @@
         "extra_trees": {
             "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\extra_trees.joblib",
             "metrics": {
-                "train_rmse": 3.5122936604749344,
-                "test_rmse": 8.167517376661232,
-                "test_mae": 4.7581118955951,
-                "test_r2": 0.9408732545920818
+                "train_rmse": 3.512293660474934,
+                "test_rmse": 8.167517376661229,
+                "test_mae": 4.758111895595099,
+                "test_r2": 0.9408732545920819
             },
             "hyperparams": {
                 "n_estimators": 126,

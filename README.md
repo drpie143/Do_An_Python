@@ -24,10 +24,9 @@ Dự án xây dựng pipeline học máy hoàn chỉnh để **dự đoán giá 
 
 ### Mô hình sử dụng:
 
-1. **Polynomial Regression** - Mô hình tuyến tính với polynomial features
-2. **Random Forest Regressor** - Ensemble learning
-3. **Extra Trees Regressor** - Extremely Randomized Trees
-4. **XGBoost Regressor** - Gradient boosting
+1. **Random Forest Regressor** - Ensemble learning
+2. **Extra Trees Regressor** - Extremely Randomized Trees
+3. **XGBoost Regressor** - Gradient boosting
 
 ### Tối ưu hyperparameters:
 
@@ -49,7 +48,7 @@ Do_An_Python/
 │   ├── modeling/                     # Module training mô hình
 │   │   ├── __init__.py
 │   │   ├── base_trainer.py           # Class BaseTrainer (abstract base)
-│   │   ├── model_registry.py         # Các trainer cụ thể (Polynomial, RF, ET, XGB)
+│   │   ├── model_registry.py         # Các trainer cụ thể (RF, ET, XGB)
 │   │   └── model_trainer.py          # Class ModelTrainer (orchestrator)
 │   │
 │   └── visualization/                # Module trực quan hóa
@@ -61,7 +60,6 @@ Do_An_Python/
 │   └── taxi_price_processed.csv      # Dữ liệu đã xử lý
 │
 ├── models/                           # Mô hình đã train
-│   ├── polynomial.joblib
 │   ├── random_forest.joblib
 │   ├── extra_trees.joblib
 │   ├── xgboost.joblib
@@ -83,7 +81,10 @@ Do_An_Python/
 │   └── pipeline_state.json
 │
 ├── notebooks/                        # Jupyter notebooks
-│   └── do_an_py_modeling.ipynb
+│   └── taxi_price_prediction.ipynb
+│
+├── report/                           # Báo cáo LaTeX
+│   └── bao_cao_do_an.tex
 │
 ├── config.py                         # File cấu hình
 ├── main.py                           # Script chính để chạy pipeline
@@ -140,7 +141,7 @@ Pipeline sẽ tự động:
 
 1. Download dữ liệu từ Google Drive (nếu chưa có)
 2. Tiền xử lý dữ liệu
-3. Train 4 mô hình
+3. Train 3 mô hình
 4. Đánh giá và so sánh
 5. Lưu mô hình và kết quả
 
@@ -198,7 +199,6 @@ trainer = ModelTrainer(X_train, X_test, y_train, y_test)
 trainer.train_all(optimize=False)
 
 # Hoặc train từng model
-trainer.train_polynomial(degree=3, alpha=1.0)
 trainer.train_rf(n_estimators=100, max_depth=10)
 trainer.train_extra_trees(n_estimators=200, max_depth=12)
 trainer.train_xgb(max_depth=6, learning_rate=0.1)
@@ -256,8 +256,7 @@ trainer.compare_feature_importance(top_n=10, save=True)
 
 | Method                | Mô tả                             |
 | --------------------- | --------------------------------- |
-| `train_all()`         | Train tất cả 4 models             |
-| `train_polynomial()`  | Train Polynomial Regression       |
+| `train_all()`         | Train tất cả 3 models             |
 | `train_rf()`          | Train Random Forest               |
 | `train_extra_trees()` | Train Extra Trees                 |
 | `train_xgb()`         | Train XGBoost                     |
@@ -268,7 +267,6 @@ trainer.compare_feature_importance(top_n=10, save=True)
 
 #### Trainer cụ thể (trong model_registry.py)
 
-- `PolynomialTrainer` - Polynomial Regression với Ridge
 - `RandomForestTrainer` - Random Forest Regressor
 - `ExtraTreesTrainer` - Extra Trees Regressor
 - `XGBoostTrainer` - XGBoost Regressor
@@ -279,7 +277,6 @@ trainer.compare_feature_importance(top_n=10, save=True)
 
 | Model         | Parameters                                                         |
 | ------------- | ------------------------------------------------------------------ |
-| Polynomial    | degree [2-5], alpha [1e-3, 10]                                     |
 | Random Forest | n_estimators [50-300], max_depth [5-20]                            |
 | Extra Trees   | n_estimators [50-300], max_depth [5-20]                            |
 | XGBoost       | max_depth [4-10], learning_rate [0.01-0.3], n_estimators [100-500] |
@@ -296,18 +293,17 @@ trainer.compare_feature_importance(top_n=10, save=True)
 
 ### So sánh hiệu suất các mô hình:
 
-| Model              | Train RMSE | Test RMSE | Test MAE | Test R²   |
-| ------------------ | ---------- | --------- | -------- | --------- |
-| Polynomial         | 14.64      | 13.58     | 10.71    | 0.837     |
-| Random Forest      | 4.89       | 7.78      | 4.94     | 0.946     |
-| Extra Trees        | 1.19       | 7.71      | 4.60     | 0.947     |
-| **XGBoost** ⭐     | **6.23**   | **6.77**  | **4.36** | **0.959** |
+| Model          | Train RMSE | Test RMSE | Test MAE | Test R²   |
+| -------------- | ---------- | --------- | -------- | --------- |
+| Random Forest  | 4.89       | 7.78      | 4.94     | 0.946     |
+| Extra Trees    | 1.19       | 7.71      | 4.60     | 0.947     |
+| **XGBoost** ⭐ | **6.36**   | **6.70**  | **4.31** | **0.960** |
 
 ### Mô hình tốt nhất: **XGBoost**
 
-- Test R²: **0.959** (giải thích 95.9% phương sai)
-- Test RMSE: **6.77**
-- Test MAE: **4.36**
+- Test R²: **0.960** (giải thích 96.0% phương sai)
+- Test RMSE: **6.70**
+- Test MAE: **4.31**
 
 ### Biểu đồ EDA (6 files trong results/eda/):
 
@@ -339,7 +335,7 @@ ENCODING_METHOD = 'onehot'
 SCALING_METHOD = 'standard'
 
 # Optuna
-OPTUNA_N_TRIALS = {'polynomial': 10, 'random_forest': 20, ...}
+OPTUNA_N_TRIALS = {'random_forest': 20, 'extra_trees': 20, 'xgboost': 30}
 ```
 
 ## 🐛 Troubleshooting
@@ -369,4 +365,4 @@ Dự án được tạo cho mục đích học tập - Môn Python cho Khoa họ
 
 ---
 
-**Ngày hoàn thành:** 05/12/2025
+**Ngày hoàn thành:** 08/12/2025

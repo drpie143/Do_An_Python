@@ -122,7 +122,7 @@ class BaseTrainer(ABC):
         self.y_test = y_test
         
         self.model = None
-        self.model_data = {}  # Chứa model + các objects liên quan (poly, etc.)
+        self.model_data = {}  # Chứa model + các objects liên quan
         self.result = {}
         self.optimization_history = {}
         

@@ -73,11 +73,12 @@
 % ===== HEADER/FOOTER =====
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\leftmark}
-\fancyhead[R]{Đồ án cuối kỳ - Python cho KHĐL}
+\fancyhead[L]{\small\nouppercase{\leftmark}}
+\fancyhead[R]{\small Đồ án Python}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{15pt}
 
 % ===== HYPERLINK SETUP =====
 \hypersetup{
@@ -101,42 +102,53 @@
 
 % ===== TRANG BÌA =====
 \begin{titlepage}
-    \centering
-    \vspace*{1cm}
+    \thispagestyle{empty}
+
+    % Khung
+    \begin{tikzpicture}[remember picture,overlay]
+        \draw[line width=1.5pt]
+            ($(current page.north west)+(1.5cm,-1.5cm)$) rectangle
+            ($(current page.south east)+(-1.5cm,1.5cm)$);
+    \end{tikzpicture}
+
+    % ===== PHẦN TRÊN: TRƯỜNG / KHOA / TÊN MÔN  =====
+    \begin{center}
+        \vspace*{1.4cm}
+
+        {\Large\bfseries TRƯỜNG ĐẠI HỌC KHOA HỌC TỰ NHIÊN}\\[0.3cm]
+        {\large\bfseries KHOA TOÁN - TIN HỌC}\\[0.4cm]
+        {\normalsize\bfseries ---------o0o---------}\\[1.2cm]
+
+        % Logo
+        \includegraphics[width=4cm]{logo.jpg}\\[1.5cm] % GIẢM KHOẢNG CÁCH Ở ĐÂY
+
+        {\Large\bfseries ĐỒ ÁN CUỐI KỲ}\\[0.4cm]
+        {\Large\bfseries MÔN: PYTHON CHO KHOA HỌC DỮ LIỆU}\\[1.6cm]
+    \end{center}
+
+    % ===== ĐỀ TÀI =====
+    {\Large\bfseries ĐỀ TÀI: DỰ ĐOÁN GIÁ CƯỚC TAXI}\\[0.3cm]
+    \noindent\hspace*{3.5 cm}{\large\bfseries SỬ DỤNG MÔ HÌNH MACHINE LEARNING}\\[1.5cm]
+
+    % ===== KHỐI THÔNG TIN  =====
+    \begin{tabular}{@{}l c l@{}}
+        \textbf{Họ tên sinh viên} & : & \textbf{Mai Quang Dũng - 232380049} \\
+                                  &   & \textbf{Ngô Anh Khoa - 23280065}    \\[0.6cm]
     
-    {\Large\textbf{TRƯỜNG ĐẠI HỌC ...}}\\[0.3cm]
-    {\large\textbf{KHOA CÔNG NGHỆ THÔNG TIN}}\\[0.5cm]
+        \textbf{Lớp}              & : & \textbf{23KDL} \\[0.6cm]
     
-    \vspace{1cm}
-    \rule{\linewidth}{0.5mm}\\[0.4cm]
-    {\Huge\bfseries ĐỒ ÁN CUỐI KỲ}\\[0.2cm]
-    {\Large\textbf{Môn: Python cho Khoa học Dữ liệu}}\\[0.2cm]
-    \rule{\linewidth}{0.5mm}\\[1cm]
-    
-    {\LARGE\bfseries DỰ ĐOÁN GIÁ CƯỚC TAXI}\\[0.3cm]
-    {\Large Sử dụng Machine Learning Pipeline}\\[2cm]
-    
-    \begin{minipage}{0.5\textwidth}
-        \begin{flushleft}\large
-            \textbf{Sinh viên thực hiện:}\\
-            1. [Họ tên SV 1] - [MSSV]\\
-            2. [Họ tên SV 2] - [MSSV]\\
-            3. [Họ tên SV 3] - [MSSV]
-        \end{flushleft}
-    \end{minipage}
-    ~
-    \begin{minipage}{0.4\textwidth}
-        \begin{flushright}\large
-            \textbf{Giảng viên hướng dẫn:}\\
-            [Tên GV]
-        \end{flushright}
-    \end{minipage}\\[3cm]
-    
+        \textbf{Giảng viên}       & : & \textbf{Hà Minh Tuấn}
+    \end{tabular}
+    % ===== DÒNG CUỐI =====
     \vfill
-    {\large Khóa: K23}\\
-    {\large Năm học: 2024 - 2025}
-    
+    \begin{center}
+        \textbf{TP. Hồ Chí Minh, ngày 7 tháng 12 năm 2025}
+    \end{center}
+
 \end{titlepage}
+
+
+
 
 % ===== MỤC LỤC =====
 \tableofcontents
@@ -173,7 +185,7 @@ Dự án này xây dựng một \textbf{pipeline học máy hoàn chỉnh} để
 
 Mục tiêu chính của đồ án bao gồm:
 \begin{enumerate}
-    \item Xây dựng pipeline khoa học dữ liệu hoàn chỉnh từ tiền xử lý đến dự đoán
+    \item Xây dựng pipeline khoa học dữ liệu hoàn chỉnh từ tiền xử lý đến áp dụng mô hình vào thực tế 
     \item Áp dụng kỹ thuật lập trình hướng đối tượng (OOP) trong Python
     \item So sánh hiệu suất của nhiều mô hình học máy
     \item Tối ưu siêu tham số (hyperparameter) sử dụng Optuna
@@ -184,7 +196,6 @@ Mục tiêu chính của đồ án bao gồm:
 
 Dự án thực hiện bài toán \textbf{Regression} để dự đoán biến mục tiêu \texttt{Trip\_Price} (giá cước taxi). Các mô hình được sử dụng bao gồm:
 \begin{itemize}
-    \item Polynomial Regression với Ridge Regularization
     \item Random Forest Regressor
     \item Extra Trees Regressor
     \item XGBoost Regressor
@@ -254,6 +265,102 @@ Weather & Điều kiện thời tiết (Clear, Rain, Fog, Snow) \\
 \begin{itemize}
     \item \textbf{Trip\_Price}: Giá cước cuối cùng của chuyến đi (đơn vị tiền tệ)
 \end{itemize}
+
+\subsection{Khám phá dữ liệu (EDA)}
+
+Trước khi xây dựng mô hình, chúng ta thực hiện Exploratory Data Analysis (EDA) để hiểu rõ dữ liệu. Các biểu đồ được tạo bởi class \texttt{DataVisualizer}.
+
+\subsubsection{Tổng quan dữ liệu}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/eda/01_data_overview.png}
+\caption{Tổng quan dữ liệu: thông tin về shape, dtypes và missing values}
+\label{fig:data_overview}
+\end{figure}
+
+Hình \ref{fig:data_overview} cho thấy:
+\begin{itemize}
+    \item Dữ liệu có 1000 mẫu với 11 cột
+    \item Không có missing values trong dữ liệu gốc
+    \item 7 biến số (numeric) và 4 biến phân loại (categorical)
+\end{itemize}
+
+\subsubsection{Phân phối các biến số}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/eda/02_numeric_distributions.png}
+\caption{Phân phối của các biến số (numeric features) với histogram và KDE}
+\label{fig:numeric_distributions}
+\end{figure}
+
+Hình \ref{fig:numeric_distributions} hiển thị histogram kết hợp KDE cho các biến số, giúp nhận diện:
+\begin{itemize}
+    \item Phân phối của từng biến (normal, skewed, multimodal)
+    \item Các thống kê cơ bản: mean, median, standard deviation
+\end{itemize}
+
+\subsubsection{Phân phối các biến phân loại}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/eda/03_categorical_distributions.png}
+\caption{Phân phối của các biến phân loại (categorical features)}
+\label{fig:categorical_distributions}
+\end{figure}
+
+Hình \ref{fig:categorical_distributions} cho thấy tần suất của từng category, giúp phát hiện class imbalance.
+
+\subsubsection{Ma trận tương quan}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{../results/eda/04_correlation_heatmap.png}
+\caption{Ma trận tương quan (Correlation Heatmap) giữa các biến số}
+\label{fig:correlation_heatmap}
+\end{figure}
+
+\textbf{Cách đọc biểu đồ:}
+\begin{itemize}
+    \item Giá trị gần \textbf{1}: Tương quan dương mạnh (khi biến này tăng, biến kia cũng tăng)
+    \item Giá trị gần \textbf{-1}: Tương quan âm mạnh (khi biến này tăng, biến kia giảm)
+    \item Giá trị gần \textbf{0}: Không có tương quan tuyến tính
+\end{itemize}
+
+\textbf{Nhận xét:}
+\begin{itemize}
+    \item \texttt{Trip\_Distance\_km} có tương quan cao nhất với \texttt{Trip\_Price} → feature quan trọng
+    \item Các features về giá (\texttt{Base\_Fare}, \texttt{Per\_Km\_Rate}) cũng tương quan với target
+    \item Cần kiểm tra multicollinearity giữa các features tương quan cao với nhau
+\end{itemize}
+
+\subsubsection{Phân tích biến mục tiêu}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/eda/05_target_analysis.png}
+\caption{Phân tích chi tiết biến mục tiêu Trip\_Price}
+\label{fig:target_analysis}
+\end{figure}
+
+Hình \ref{fig:target_analysis} phân tích biến mục tiêu \texttt{Trip\_Price}:
+\begin{itemize}
+    \item Distribution plot: Kiểm tra phân phối có gần normal không
+    \item Q-Q plot: So sánh với phân phối chuẩn lý thuyết
+    \item Box plot: Phát hiện outliers trong target
+\end{itemize}
+
+\subsubsection{Phát hiện Outliers}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/eda/06_outliers_boxplot.png}
+\caption{Boxplot phát hiện outliers cho tất cả biến số}
+\label{fig:outliers_boxplot}
+\end{figure}
+
+Hình \ref{fig:outliers_boxplot} sử dụng boxplot để phát hiện outliers trong dữ liệu gốc. Các điểm nằm ngoài khoảng $[Q1 - 1.5 \times IQR, Q3 + 1.5 \times IQR]$ được coi là outliers và sẽ được xử lý trong bước tiền xử lý.
 
 % =====================================
 % CHƯƠNG 3: KIẾN TRÚC HỆ THỐNG
@@ -341,25 +448,43 @@ Lớp \texttt{DataLoader} xử lý các bước \textbf{trước} khi chia train
 \centering
 \caption{Chi tiết các phương thức của lớp DataLoader}
 \label{tab:dataloader_methods}
-\begin{tabular}{|p{3.5cm}|p{3cm}|p{7cm}|}
+
+% làm hàng cao hơn 1 xíu cho đỡ nghẹt
+\renewcommand{\arraystretch}{1.2}
+
+\begin{tabular}{|>{\raggedright\arraybackslash\ttfamily}p{4cm}|
+                >{\raggedright\arraybackslash}p{3cm}|
+                >{\raggedright\arraybackslash}p{7.5cm}|}
 \hline
 \textbf{Phương thức} & \textbf{Loại} & \textbf{Mô tả chi tiết} \\
 \hline
-\texttt{load\_data(filepath)} & Static method & Đọc dữ liệu từ file với các định dạng được hỗ trợ: CSV (.csv), Excel (.xls, .xlsx), JSON (.json). Tự động nhận diện định dạng dựa trên phần mở rộng file. \\
+load\_data(filepath) & Static method &
+Đọc dữ liệu từ file với các định dạng được hỗ trợ: CSV (.csv), Excel (.xls, .xlsx), JSON (.json).
+Tự động nhận diện định dạng dựa trên phần mở rộng file. \\
 \hline
-\texttt{from\_file(filepath)} & Class method & Factory method tạo instance DataLoader mới từ file, tự động gọi \texttt{load\_data()} và \texttt{detect\_types()}. \\
+from\_file(filepath) & Class method &
+Factory method tạo instance DataLoader mới từ file, tự động gọi \texttt{load\_data()} và \texttt{detect\_types()}. \\
 \hline
-\texttt{detect\_types()} & Instance method & Phân loại tự động các cột thành 4 nhóm: numeric (số), categorical (phân loại), datetime (thời gian), boolean (logic). Sử dụng \texttt{pandas.select\_dtypes()}. \\
+detect\_types() & Instance method &
+Phân loại tự động các cột thành 4 nhóm: numeric (số), categorical (phân loại), datetime (thời gian), boolean (logic).
+Sử dụng \texttt{pandas.select\_dtypes()}. \\
 \hline
-\texttt{eda\_overview(top\_n)} & Instance method & Sinh báo cáo EDA bao gồm: shape, số duplicates, memory usage, tỉ lệ missing values, thống kê mô tả cho từng cột. \\
+eda\_overview(top\_n) & Instance method &
+Sinh báo cáo EDA bao gồm: shape, số duplicates, memory usage, tỉ lệ missing values, thống kê mô tả cho từng cột. \\
 \hline
-\texttt{drop\_duplicates()} & Instance method & Loại bỏ các dòng trùng lặp hoàn toàn trong DataFrame, giữ lại dòng đầu tiên. \\
+drop\_duplicates() & Instance method &
+Loại bỏ các dòng trùng lặp hoàn toàn trong DataFrame, giữ lại dòng đầu tiên. \\
 \hline
-\texttt{unify\_values(rules)} & Instance method & Chuẩn hóa giá trị text: chuyển lowercase, loại bỏ khoảng trắng thừa, thay thế các giá trị tương đương (VD: "Yes"/"yes"/"Y" → "yes"). \\
+unify\_values(rules) & Instance method &
+Chuẩn hóa giá trị text: chuyển lowercase, loại bỏ khoảng trắng thừa, thay thế các giá trị tương đương
+(ví dụ: "Yes"/"yes"/"Y" $\rightarrow$ "yes"). \\
 \hline
-\texttt{apply\_constraints(rules)} & Instance method & Áp dụng các ràng buộc miền giá trị: clip (cắt về min/max), drop (xóa dòng vi phạm), hoặc thay bằng mean/median. \\
+apply\_constraints  & Instance method &
+Áp dụng các ràng buộc miền giá trị: \emph{clip} (cắt về min/max), \emph{drop} (xóa dòng vi phạm),
+hoặc thay bằng mean/median. \\
 \hline
-\texttt{get\_data()} & Instance method & Trả về DataFrame đã được xử lý, sẵn sàng cho bước chia train/test. \\
+get\_data() & Instance method &
+Trả về DataFrame đã được xử lý, sẵn sàng cho bước chia train/test. \\
 \hline
 \end{tabular}
 \end{table}
@@ -382,11 +507,15 @@ Passenger\_Count & 1 & 6 & clip & Số hành khách tối thiểu 1, tối đa 6
 \hline
 Trip\_Duration\_Minutes & 0 & 120 & clip & Thời gian chuyến đi tối đa 2 giờ \\
 \hline
-Base\_Fare & 0 & - & mean & Giá cước không âm, thay bằng mean nếu vi phạm \\
+Base\_Fare & 0 & - & clip & Giá cước âm sẽ bị cắt về 0 (lỗi nhập liệu nhẹ) \\
 \hline
-Per\_Km\_Rate & 0 & - & mean & Giá/km không âm \\
+Per\_Km\_Rate & 0 & - & drop & Giá/km âm bị xem là lỗi nặng → loại bỏ dòng \\
 \hline
-Per\_Minute\_Rate & 0 & - & mean & Giá/phút không âm \\
+Per\_Minute\_Rate & 0 & - & drop & Giá/phút âm → drop để tránh nhiễu \\
+\hline
+Trip\_Price & 0 & - & drop & Target không thể âm, loại bỏ để tránh hỏng training \\
+\hline
+Speed\_kmh & 0 & 160 & clip & Vận tốc trung bình hợp lý (dùng khi bật feature) \\
 \hline
 \end{tabular}
 \end{table}
@@ -414,28 +543,52 @@ Data Leakage xảy ra khi thông tin từ tập test "rò rỉ" vào quá trình
 \centering
 \caption{Chi tiết các phương thức của lớp DataTransformer}
 \label{tab:datatransformer_methods}
-\begin{tabular}{|p{3.5cm}|p{2.5cm}|p{7.5cm}|}
+
+\renewcommand{\arraystretch}{1.25}
+\small % Thu nhỏ font cho vừa trang
+
+\begin{tabular}{|>{\raggedright\arraybackslash\ttfamily}p{3.2cm}|
+                >{\raggedright\arraybackslash}p{2.5cm}|
+                >{\raggedright\arraybackslash}p{7.5cm}|}
 \hline
 \textbf{Phương thức} & \textbf{Tham số} & \textbf{Mô tả chi tiết} \\
 \hline
-\texttt{fill\_missing()} & rules, fit & Xử lý missing values với các chiến lược: \textbf{mean} (trung bình), \textbf{median} (trung vị), \textbf{mode} (giá trị xuất hiện nhiều nhất), \textbf{constant} (giá trị cố định). Khi fit=True, tính và lưu các giá trị thống kê. \\
+
+fill\_missing() & rules, fit &
+Xử lý missing values: \textbf{mean}, \textbf{median}, \textbf{mode}, \textbf{constant}. Khi \texttt{fit=True}, tính và lưu giá trị thống kê. \\
 \hline
-\texttt{remove\_outliers()} & method, threshold & Loại bỏ outliers bằng: \textbf{IQR} (Inter-Quartile Range với ngưỡng 1.5×IQR), \textbf{z-score} (ngưỡng mặc định 3), \textbf{Isolation Forest} (unsupervised ML). Chỉ áp dụng trên tập train. \\
+
+remove\_outliers() & method, threshold &
+Loại bỏ outliers: \textbf{IQR} (1.5×IQR), \textbf{z-score} (ngưỡng=3), \textbf{Isolation Forest}. \\
 \hline
-\texttt{encode\_categorical()} & method, cols & Mã hóa biến phân loại: \textbf{OneHotEncoder} (tạo cột nhị phân cho mỗi category), \textbf{LabelEncoder} (gán số nguyên 0,1,2...), \textbf{OrdinalEncoder} (cho biến có thứ tự). \\
+
+encode\_categorical & method, cols &
+Mã hóa biến phân loại: \textbf{OneHotEncoder}, \textbf{LabelEncoder}, \textbf{OrdinalEncoder}. \\
 \hline
-\texttt{scale\_features()} & method, exclude & Chuẩn hóa features số: \textbf{StandardScaler} (z-score: mean=0, std=1), \textbf{MinMaxScaler} (scale về [0,1]), \textbf{RobustScaler} (dùng median và IQR, robust với outliers). \\
+
+scale\_features() & method, exclude &
+Chuẩn hóa features số: \textbf{StandardScaler}, \textbf{MinMaxScaler}, \textbf{RobustScaler}. \\
 \hline
-\texttt{fit\_transform()} & target\_col & Pipeline hoàn chỉnh thực hiện tuần tự: fill missing → encode categorical → scale features. Tách biến mục tiêu ra khỏi features. \\
+
+fit\_transform() & target\_col &
+Pipeline hoàn chỉnh: fill missing → encode → scale. Tách target ra khỏi features. \\
 \hline
-\texttt{transform\_new\_data()} & df & Áp dụng các transformation đã học từ train lên dữ liệu mới (test hoặc production). \\
+
+transform\_new\_data & df &
+Áp dụng transformation đã học từ train lên dữ liệu mới. \\
 \hline
-\texttt{save\_state()} & path & Lưu toàn bộ trạng thái (impute values, fitted encoders, fitted scalers) bằng joblib để tái sử dụng. \\
+
+save\_state() & path &
+Lưu trạng thái (impute values, encoders, scalers) bằng joblib. \\
 \hline
-\texttt{load\_state()} & path & Tải trạng thái đã lưu để transform dữ liệu mới mà không cần train lại. \\
+
+load\_state() & path &
+Tải trạng thái đã lưu để transform dữ liệu mới. \\
 \hline
+
 \end{tabular}
 \end{table}
+
 
 \subsubsection{Các chiến lược xử lý Missing Values}
 
@@ -453,7 +606,7 @@ Median & Robust với outliers & Có thể không đại diện cho phân phối
 \hline
 Mode & Phù hợp categorical & Có thể tạo bias nếu mode chiếm ưu thế & Biến phân loại \\
 \hline
-Constant & Kiểm soát hoàn toàn & Cần domain knowledge & Biết giá trị hợp lý \\
+Constant & Kiểm soát hoàn toàn & Cần hiểu domain knowledge & Biết giá trị hợp lý \\
 \hline
 \end{tabular}
 \end{table}
@@ -513,71 +666,52 @@ Module modeling được thiết kế theo pattern \textbf{Template Method} vớ
 \centering
 \caption{Các phương thức của lớp BaseTrainer}
 \label{tab:basetrainer_methods}
-\begin{tabular}{|p{3.5cm}|p{2.5cm}|p{7.5cm}|}
+
+\renewcommand{\arraystretch}{1.25} % khoảng cách hàng
+
+{%
+\setlength{\tabcolsep}{10pt} % padding ngang
+
+\begin{tabular}{|>{\ttfamily\raggedright\arraybackslash}p{5cm}  % PHƯƠNG THỨC RỘNG HƠN
+                |>{\raggedright\arraybackslash}p{3.2cm} 
+                |>{\raggedright\arraybackslash}p{6.6cm}|} % MÔ TẢ NHỎ LẠI
 \hline
 \textbf{Phương thức} & \textbf{Loại} & \textbf{Mô tả} \\
 \hline
-\texttt{\_\_init\_\_()} & Constructor & Nhận X\_train, X\_test, y\_train, y\_test và khởi tạo các thuộc tính chung. \\
-\hline
-\texttt{model\_name} & Property (abstract) & Trả về tên mô hình, phải được override bởi subclass. \\
-\hline
-\texttt{evaluate()} & Instance method & Tính các metrics đánh giá (RMSE, MAE, R²) cho predictions. \\
-\hline
-\texttt{\_create\_optuna\_study()} & Instance method & Tạo Optuna study với TPESampler và MedianPruner. \\
-\hline
-\texttt{\_run\_cross\_validation()} & Instance method & Chạy k-fold cross-validation và trả về RMSE trung bình. \\
-\hline
-\texttt{\_objective()} & Abstract method & Objective function cho Optuna, phải được implement bởi subclass. \\
-\hline
-\texttt{optimize()} & Abstract method & Tối ưu hyperparameters, phải được implement bởi subclass. \\
-\hline
-\texttt{train()} & Abstract method & Huấn luyện mô hình, phải được implement bởi subclass. \\
-\hline
+
+\_\_init\_\_() & Constructor &
+Nhận X\_train, X\_test, y\_train, y\_test và thiết lập các thuộc tính chung. \\ \hline
+
+model\_name & Property (abstract) &
+Trả về tên mô hình — phải được override bởi subclass. \\ \hline
+
+evaluate() & Instance method &
+Tính các metrics đánh giá như RMSE, MAE, R². \\ \hline
+
+\_create\_optuna\_study() & Instance method &
+Khởi tạo Optuna study dùng TPESampler và MedianPruner. \\ \hline
+
+\_run\_cross\_validation() & Instance method &
+Chạy k-fold cross-validation và trả về RMSE trung bình. \\ \hline
+
+\_objective() & Abstract method &
+Định nghĩa objective function cho Optuna. \\ \hline
+
+optimize() & Abstract method &
+Tối ưu hyperparameters. \\ \hline
+
+train() & Abstract method &
+Huấn luyện mô hình. \\ \hline
+
 \end{tabular}
+}%
 \end{table}
 
 \subsection{Các mô hình được sử dụng}
 
-\subsubsection{Polynomial Regression với Ridge Regularization}
-
-\textbf{Ý tưởng:} Polynomial Regression mở rộng Linear Regression bằng cách tạo các đặc trưng bậc cao từ features gốc, cho phép mô hình hóa các mối quan hệ phi tuyến.
-
-\textbf{Công thức toán học:}
-\begin{equation}
-\hat{y} = w_0 + w_1 x + w_2 x^2 + w_3 x^3 + ... + w_n x^n
-\end{equation}
-
-Với nhiều features, polynomial features bao gồm tất cả các tổ hợp:
-\begin{equation}
-\phi(x_1, x_2) = [1, x_1, x_2, x_1^2, x_1 x_2, x_2^2, x_1^3, ...]
-\end{equation}
-
-\textbf{Ridge Regularization:} Để tránh overfitting khi số features tăng lên nhanh chóng, sử dụng L2 regularization:
-\begin{equation}
-L = \sum_{i=1}^{m} (y_i - \hat{y}_i)^2 + \alpha \sum_{j=1}^{n} w_j^2
-\end{equation}
-
-Trong đó $\alpha$ là hệ số regularization, kiểm soát mức độ "phạt" các trọng số lớn.
-
-\begin{table}[H]
-\centering
-\caption{Hyperparameters của Polynomial Regression}
-\begin{tabular}{|l|c|p{7cm}|}
-\hline
-\textbf{Tham số} & \textbf{Giá trị} & \textbf{Ý nghĩa} \\
-\hline
-degree & 3 & Bậc cao nhất của polynomial. Bậc cao hơn → phức tạp hơn → dễ overfit. \\
-\hline
-alpha & 1.0 & Hệ số regularization. Alpha lớn → model đơn giản hơn. \\
-\hline
-feature\_subset & [3 features] & Chỉ sử dụng các features có correlation cao với target. \\
-\hline
-\end{tabular}
-\end{table}
-
 \subsubsection{Random Forest Regressor}
 
-\textbf{Ý tưởng:} Random Forest là phương pháp ensemble kết hợp nhiều Decision Trees được huấn luyện trên các bootstrap samples khác nhau (Bagging).
+\textbf{Ý tưởng:} Random Forest là thuật toán ensemble learning phổ biến, kết hợp nhiều Decision Trees được huấn luyện trên các bootstrap samples khác nhau (Bagging), sau đó lấy trung bình kết quả. Thuật toán xử lý tốt cả bài toán phân loại và hồi quy, ít nhạy cảm với outliers.
 
 \textbf{Công thức dự đoán:}
 \begin{equation}
@@ -613,7 +747,7 @@ min\_samples\_leaf & 2 & Số mẫu tối thiểu ở mỗi leaf node. \\
 
 \subsubsection{Extra Trees Regressor}
 
-\textbf{Ý tưởng:} Extra Trees (Extremely Randomized Trees) là biến thể của Random Forest với độ random cao hơn trong việc chọn split points.
+\textbf{Ý tưởng:} Extra Trees (Extremely Randomized Trees) là biến thể của Random Forest với tính ngẫu nhiên cao hơn. Tương tự Random Forest nhưng chọn split points ngẫu nhiên thay vì tối ưu, giúp giảm variance và huấn luyện nhanh hơn.
 
 \textbf{Khác biệt với Random Forest:}
 \begin{itemize}
@@ -642,7 +776,7 @@ min\_samples\_leaf & 1 & Số mẫu tối thiểu ở leaf (cho phép leaves nh�
 
 \subsubsection{XGBoost Regressor}
 
-\textbf{Ý tưởng:} XGBoost (Extreme Gradient Boosting) là thuật toán Gradient Boosting với nhiều cải tiến về hiệu suất và regularization.
+\textbf{Ý tưởng:} XGBoost (Extreme Gradient Boosting) là thuật toán Gradient Boosting với các cải tiến về tối ưu hóa (second-order gradient), regularization mạnh, và xử lý missing values tự động. Khác với Random Forest (bagging), XGBoost huấn luyện các cây tuần tự, mỗi cây học từ sai sót của cây trước.
 
 \textbf{Công thức Boosting:}
 \begin{equation}
@@ -699,7 +833,7 @@ reg\_alpha ($\alpha$) & 0.5 & L1 regularization trên leaf weights. \\
 \subsubsection{Vai trò và chức năng}
 
 \begin{itemize}
-    \item \textbf{Quản lý trainers:} Tạo và quản lý các trainer cụ thể (Polynomial, RF, ET, XGBoost).
+    \item \textbf{Quản lý trainers:} Tạo và quản lý các trainer cụ thể (RF, ET, XGBoost).
     \item \textbf{Đồng bộ kết quả:} Thu thập kết quả từ các trainers vào một nơi.
     \item \textbf{So sánh mô hình:} Tự động so sánh và chọn mô hình tốt nhất.
     \item \textbf{Lưu trữ:} Lưu tất cả mô hình và kết quả.
@@ -713,15 +847,13 @@ reg\_alpha ($\alpha$) & 0.5 & L1 regularization trên leaf weights. \\
 \hline
 \textbf{Phương thức} & \textbf{Mô tả chi tiết} \\
 \hline
-\texttt{train\_polynomial()} & Huấn luyện Polynomial Regression với các tham số degree, alpha, feature\_subset. \\
-\hline
 \texttt{train\_rf()} & Huấn luyện Random Forest với các tham số n\_estimators, max\_depth, min\_samples\_split, min\_samples\_leaf. \\
 \hline
 \texttt{train\_extra\_trees()} & Huấn luyện Extra Trees với cấu hình tương tự Random Forest. \\
 \hline
 \texttt{train\_xgb()} & Huấn luyện XGBoost với đầy đủ các hyperparameters của XGBoost. \\
 \hline
-\texttt{train\_all(optimize)} & Huấn luyện tuần tự tất cả 4 mô hình. Nếu optimize=True, chạy Optuna optimization trước. \\
+\texttt{train\_all(optimize)} & Huấn luyện tuần tự tất cả 3 mô hình. Nếu optimize=True, chạy Optuna optimization trước. \\
 \hline
 \texttt{optimize\_*()} & Các phương thức tối ưu hyperparameters cho từng mô hình bằng Optuna. \\
 \hline
@@ -814,9 +946,6 @@ Dự án sử dụng Optuna với cấu hình sau:
 \hline
 \textbf{Mô hình} & \textbf{Tham số} & \textbf{Kiểu} & \textbf{Range} \\
 \hline
-\multirow{2}{*}{Polynomial} & degree & int & [2, 5] \\
-& alpha & float (log) & [0.001, 10] \\
-\hline
 \multirow{4}{*}{Random Forest} & n\_estimators & int & [50, 300] \\
 & max\_depth & int & [5, 20] \\
 & min\_samples\_split & int & [2, 10] \\
@@ -869,7 +998,7 @@ Trong đó:
     \item \textbf{Đơn vị:} Cùng đơn vị với biến mục tiêu (VD: nếu Trip\_Price tính bằng USD, RMSE cũng tính bằng USD)
     \item \textbf{Nhạy cảm với outliers:} Do bình phương sai số, các sai số lớn bị "phạt" nặng hơn
     \item \textbf{Luôn dương:} RMSE $\geq$ 0, với RMSE = 0 là mô hình hoàn hảo
-    \item \textbf{Ý nghĩa:} RMSE = 10.48 có nghĩa là trung bình, dự đoán lệch khoảng 10.48 đơn vị tiền tệ so với giá thực
+    \item \textbf{Ý nghĩa:} RMSE = 6.77 có nghĩa là trung bình, dự đoán lệch khoảng 6.77 đơn vị tiền tệ so với giá thực
 \end{itemize}
 
 \textbf{Khi nào dùng RMSE?}
@@ -894,7 +1023,7 @@ MAE = \frac{1}{n}\sum_{i=1}^{n}|y_i - \hat{y}_i|
 \begin{itemize}
     \item \textbf{Đơn vị:} Cùng đơn vị với biến mục tiêu
     \item \textbf{Robust với outliers:} Không bình phương nên các sai số lớn không bị phạt quá mức
-    \item \textbf{Dễ diễn giải:} MAE = 5.72 có nghĩa là trung bình, dự đoán lệch 5.72 đơn vị tiền tệ
+    \item \textbf{Dễ diễn giải:} MAE = 4.36 có nghĩa là trung bình, dự đoán lệch 4.36 đơn vị tiền tệ
     \item \textbf{Luôn $\leq$ RMSE:} Do bất đẳng thức Cauchy-Schwarz
 \end{itemize}
 
@@ -946,7 +1075,7 @@ Trong đó:
         \item $R^2 = 0$: Mô hình không tốt hơn việc dự đoán bằng mean
         \item $R^2 < 0$: Mô hình tệ hơn việc dự đoán bằng mean
     \end{itemize}
-    \item \textbf{Ý nghĩa:} $R^2 = 0.953$ có nghĩa mô hình giải thích được 95.3\% phương sai của giá cước taxi
+    \item \textbf{Ý nghĩa:} $R^2 = 0.959$ có nghĩa mô hình giải thích được 95.9\% phương sai của giá cước taxi
 \end{itemize}
 
 \textbf{Diễn giải R² theo ngành:}
@@ -997,26 +1126,52 @@ R² & $(-\infty, 1]$ & 1 & Không có & "Mô hình giải thích được bao nh
 \hline
 \textbf{Mô hình} & \textbf{Train RMSE} & \textbf{Test RMSE} & \textbf{Test MAE} & \textbf{Test R²} \\
 \hline
-Polynomial Regression & 11.20 & 13.92 & 8.64 & 0.917 \\
+Random Forest & 4.47 & 7.81 & 5.02 & 0.946 \\
 \hline
-Random Forest & 5.09 & 11.95 & 6.27 & 0.939 \\
+Extra Trees & 3.51 & 8.17 & 4.76 & 0.941 \\
 \hline
-\textbf{Extra Trees} & \textbf{1.52} & \textbf{10.48} & \textbf{5.72} & \textbf{0.953} \\
-\hline
-XGBoost & 6.63 & 16.27 & 6.47 & 0.887 \\
+\textbf{XGBoost} & \textbf{3.67} & \textbf{6.67} & \textbf{3.98} & \textbf{0.961} \\
 \hline
 \end{tabular}
 \end{table}
 
+\subsubsection{Biểu đồ so sánh Metrics}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/model/metrics_summary.png}
+\caption{So sánh các metrics (RMSE, MAE, R²) của 3 mô hình}
+\label{fig:metrics_summary}
+\end{figure}
+
+Hình \ref{fig:metrics_summary} trực quan hóa kết quả từ Bảng \ref{tab:model_results}, cho thấy XGBoost vượt trội ở tất cả các metrics.
+
+\subsubsection{Biểu đồ Actual vs Predicted}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../results/model/predictions_combined.png}
+\caption{Scatter plot Actual vs Predicted cho 3 mô hình}
+\label{fig:predictions_combined}
+\end{figure}
+
+\textbf{Cách đọc biểu đồ Hình \ref{fig:predictions_combined}:}
+\begin{itemize}
+    \item Mỗi điểm đại diện cho một mẫu test
+    \item Đường chéo là đường $y = x$ (dự đoán hoàn hảo)
+    \item Điểm càng gần đường chéo → dự đoán càng chính xác
+    \item XGBoost có các điểm phân bố sát đường chéo nhất
+\end{itemize}
+
 \subsection{Phân tích chi tiết kết quả}
 
-\subsubsection{Mô hình tốt nhất: Extra Trees}
+\subsubsection{Mô hình tốt nhất: XGBoost}
 
-\textbf{Extra Trees Regressor} đạt hiệu suất tốt nhất với:
+\textbf{XGBoost Regressor} đạt hiệu suất tốt nhất với:
 \begin{itemize}
-    \item \textbf{Test RMSE = 10.48}: Sai số điển hình khoảng 10.48 đơn vị tiền tệ
-    \item \textbf{Test MAE = 5.72}: Sai số trung bình khoảng 5.72 đơn vị tiền tệ
-    \item \textbf{Test R² = 0.953}: Giải thích được 95.3\% phương sai của giá cước
+    \item \textbf{Test RMSE = 6.67}: Sai số điển hình khoảng 6.67 đơn vị tiền tệ
+    \item \textbf{Test MAE = 3.98}: Sai số trung bình khoảng 3.98 đơn vị tiền tệ
+    \item \textbf{Test R² = 0.961}: Giải thích được 96.1\% phương sai của giá cước
 \end{itemize}
 
 \subsubsection{Phân tích Overfitting}
@@ -1027,9 +1182,9 @@ XGBoost & 6.63 & 16.27 & 6.47 & 0.887 \\
 
 \textbf{Dấu hiệu overfitting trong kết quả:}
 \begin{itemize}
-    \item \textbf{Extra Trees}: Train RMSE = 1.52, Test RMSE = 10.48 → Gap = 8.96 (overfitting nhẹ đến trung bình)
-    \item \textbf{Random Forest}: Train RMSE = 5.09, Test RMSE = 11.95 → Gap = 6.86 (overfitting nhẹ)
-    \item \textbf{Polynomial}: Train RMSE = 11.20, Test RMSE = 13.92 → Gap = 2.72 (ít overfitting)
+    \item \textbf{XGBoost}: Train RMSE = 3.67, Test RMSE = 6.67 → Gap = 3.00 (tổng quát hóa tốt)
+    \item \textbf{Extra Trees}: Train RMSE = 3.51, Test RMSE = 8.17 → Gap = 4.66 (overfitting đáng chú ý)
+    \item \textbf{Random Forest}: Train RMSE = 4.47, Test RMSE = 7.81 → Gap = 3.34 (overfitting nhẹ)
 \end{itemize}
 
 \textbf{Cách giảm overfitting:}
@@ -1045,23 +1200,16 @@ XGBoost & 6.63 & 16.27 & 6.47 & 0.887 \\
 \begin{enumerate}
     \item \textbf{Extra Trees vs Random Forest:} 
     \begin{itemize}
-        \item Extra Trees có Test RMSE thấp hơn (10.48 vs 11.95)
-        \item Lý do: Độ random cao hơn trong việc chọn split points giúp giảm variance
-        \item Extra Trees cũng nhanh hơn do không cần tìm split tối ưu
-    \end{itemize}
-    
-    \item \textbf{Polynomial Regression:} 
-    \begin{itemize}
-        \item Đạt R² = 0.917 - khá tốt cho mô hình đơn giản
-        \item Gap Train-Test nhỏ nhất → generalizes tốt
-        \item Phù hợp khi cần mô hình interpretable
+        \item Extra Trees vẫn nhỉnh hơn nhẹ về Test RMSE (7.71 vs 7.78) nhưng gap train-test lớn hơn
+        \item Random Forest ổn định hơn (gap ~2.9) nên phù hợp khi cần generalization an toàn
+        \item Cả hai đều là lựa chọn tốt nếu muốn inference nhanh trên CPU
     \end{itemize}
     
     \item \textbf{XGBoost:}
     \begin{itemize}
-        \item Test RMSE cao nhất (16.27) - hiệu suất kém nhất
-        \item Có thể do: hyperparameters chưa tối ưu, cần tuning thêm
-        \item XGBoost thường cần nhiều tuning hơn các tree-based methods khác
+        \item Test RMSE thấp nhất (6.67) và R² cao nhất (0.961)
+        \item Generalization rất tốt (gap chỉ 3.00) nhờ chiến lược xử lý dữ liệu clip/drop
+        \item Dù thời gian train dài hơn (~12s), đây là mô hình được khuyến nghị cho production
     \end{itemize}
 \end{enumerate}
 
@@ -1071,151 +1219,51 @@ XGBoost & 6.63 & 16.27 & 6.47 & 0.887 \\
 \centering
 \caption{Hyperparameters sử dụng cho từng mô hình}
 \label{tab:hyperparams}
+
+\renewcommand{\arraystretch}{1.35} % tăng chiều cao hàng
+
 \begin{tabular}{|l|p{10cm}|}
 \hline
 \textbf{Mô hình} & \textbf{Hyperparameters} \\
 \hline
-Polynomial & degree=3, alpha=1.0, feature\_subset=[Trip\_Distance\_km, Per\_Km\_Rate, Trip\_Duration\_Minutes] \\
+
+Random Forest &
+\begin{tabular}[t]{@{}l@{}}
+\hspace{0.4cm}n\_estimators = 100 \\
+\hspace{0.4cm}max\_depth = 10 \\
+\hspace{0.4cm}min\_samples\_split = 5 \\
+\hspace{0.4cm}min\_samples\_leaf = 2
+\end{tabular}
+\\
 \hline
-Random Forest & n\_estimators=100, max\_depth=10, min\_samples\_split=5, min\_samples\_leaf=2 \\
+
+Extra Trees &
+\begin{tabular}[t]{@{}l@{}}
+\hspace{0.4cm}n\_estimators = 200 \\
+\hspace{0.4cm}max\_depth = 12 \\
+\hspace{0.4cm}min\_samples\_split = 2 \\
+\hspace{0.4cm}min\_samples\_leaf = 1
+\end{tabular}
+\\
 \hline
-Extra Trees & n\_estimators=200, max\_depth=12, min\_samples\_split=2, min\_samples\_leaf=1 \\
+
+XGBoost &
+\begin{tabular}[t]{@{}l@{}}
+\hspace{0.4cm}max\_depth = 4 \\
+\hspace{0.4cm}learning\_rate = 0.05 \\
+\hspace{0.4cm}n\_estimators = 150 \\
+\hspace{0.4cm}subsample = 0.7 \\
+\hspace{0.4cm}colsample\_bytree = 0.7 \\
+\hspace{0.4cm}reg\_lambda = 1.0 \\
+\hspace{0.4cm}reg\_alpha = 0.5 
+\end{tabular}
+\\
 \hline
-XGBoost & max\_depth=4, learning\_rate=0.05, n\_estimators=150, subsample=0.7, colsample\_bytree=0.7, reg\_lambda=1.0, reg\_alpha=0.5 \\
-\hline
+
 \end{tabular}
 \end{table}
 
-% =====================================
-% CHƯƠNG 8: TRỰC QUAN HÓA
-% =====================================
-\section{Trực quan hóa dữ liệu và kết quả}
-
-\subsection{Class DataVisualizer}
-
-Lớp \texttt{DataVisualizer} cung cấp các phương thức vẽ biểu đồ chuyên nghiệp phục vụ cho việc phân tích dữ liệu và đánh giá mô hình.
-
-\subsubsection{Mục đích và vai trò}
-
-\begin{itemize}
-    \item \textbf{EDA (Exploratory Data Analysis):} Khám phá và hiểu dữ liệu trước khi xây dựng mô hình
-    \item \textbf{Feature Analysis:} Phân tích đặc điểm và mối quan hệ giữa các features
-    \item \textbf{Model Evaluation:} Trực quan hóa kết quả và so sánh các mô hình
-    \item \textbf{Communication:} Trình bày kết quả một cách trực quan, dễ hiểu
-\end{itemize}
-
-\subsubsection{Chi tiết các phương thức}
-
-\begin{table}[H]
-\centering
-\caption{Chi tiết các phương thức trực quan hóa}
-\label{tab:visualizer_methods}
-\begin{tabular}{|p{4cm}|p{9.5cm}|}
-\hline
-\textbf{Phương thức} & \textbf{Mô tả chi tiết} \\
-\hline
-\texttt{plot\_numeric\_grid()} & Vẽ histogram với KDE (Kernel Density Estimation) cho tất cả biến số. Hiển thị mean, median, std. Giúp nhận diện phân phối, skewness. \\
-\hline
-\texttt{plot\_categorical\_grid()} & Vẽ bar chart cho các biến phân loại. Hiển thị tần suất của mỗi category, giúp phát hiện class imbalance. \\
-\hline
-\texttt{plot\_correlation\_heatmap()} & Vẽ ma trận tương quan (correlation matrix) dạng heatmap. Giúp nhận diện multicollinearity và features quan trọng. \\
-\hline
-\texttt{plot\_target\_analysis()} & Phân tích biến mục tiêu: distribution, Q-Q plot, box plot. Kiểm tra normality và outliers của target. \\
-\hline
-\texttt{plot\_outliers\_boxplot()} & Vẽ boxplot cho tất cả biến số. Hiển thị Q1, Q3, IQR, và số lượng outliers cho mỗi biến. \\
-\hline
-\texttt{plot\_data\_overview()} & Tổng quan dữ liệu: shape, dtypes, missing values percentage theo từng cột. \\
-\hline
-\texttt{plot\_metrics\_summary()} & So sánh các metrics (RMSE, MAE, R²) của tất cả mô hình dưới dạng grouped bar chart. \\
-\hline
-\texttt{plot\_predictions\_combined()} & Scatter plot Actual vs Predicted cho tất cả mô hình. Bao gồm đường y=x để đánh giá độ chính xác. \\
-\hline
-\texttt{plot\_feature\_importance()} & So sánh feature importance của các tree-based models. Giúp hiểu features nào ảnh hưởng nhiều nhất. \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Các biểu đồ EDA}
-
-Dự án tạo ra 6 biểu đồ EDA trong thư mục \texttt{results/eda/}:
-
-\subsubsection{Tổng quan dữ liệu}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/eda/01_data_overview.png}
-\caption{Tổng quan dữ liệu: thông tin về shape, dtypes và missing values}
-\label{fig:data_overview}
-\end{figure}
-
-\subsubsection{Phân phối các biến số}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/eda/02_numeric_distributions.png}
-\caption{Phân phối của các biến số (numeric features) với histogram và KDE}
-\label{fig:numeric_distributions}
-\end{figure}
-
-\subsubsection{Phân phối các biến phân loại}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/eda/03_categorical_distributions.png}
-\caption{Phân phối của các biến phân loại (categorical features)}
-\label{fig:categorical_distributions}
-\end{figure}
-
-\subsubsection{Ma trận tương quan}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.85\textwidth]{../results/eda/04_correlation_heatmap.png}
-\caption{Ma trận tương quan (Correlation Heatmap) giữa các biến số}
-\label{fig:correlation_heatmap}
-\end{figure}
-
-\subsubsection{Phân tích biến mục tiêu}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/eda/05_target_analysis.png}
-\caption{Phân tích chi tiết biến mục tiêu Trip\_Price}
-\label{fig:target_analysis}
-\end{figure}
-
-\subsubsection{Phát hiện Outliers}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/eda/06_outliers_boxplot.png}
-\caption{Boxplot phát hiện outliers cho tất cả biến số}
-\label{fig:outliers_boxplot}
-\end{figure}
-
-\subsection{Các biểu đồ Model Evaluation}
-
-Dự án tạo ra 3 biểu đồ đánh giá mô hình trong thư mục \texttt{results/model/}:
-
-\subsubsection{So sánh Metrics các mô hình}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/model/metrics_summary.png}
-\caption{So sánh các metrics (RMSE, MAE, R²) của 4 mô hình}
-\label{fig:metrics_summary}
-\end{figure}
-
-\subsubsection{Actual vs Predicted}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{../results/model/predictions_combined.png}
-\caption{Scatter plot Actual vs Predicted cho 4 mô hình}
-\label{fig:predictions_combined}
-\end{figure}
-
-\subsubsection{Feature Importance}
+\subsection{Feature Importance}
 
 \begin{figure}[H]
 \centering
@@ -1224,162 +1272,87 @@ Dự án tạo ra 3 biểu đồ đánh giá mô hình trong thư mục \texttt{
 \label{fig:feature_importance}
 \end{figure}
 
-\subsection{Phân tích ý nghĩa các biểu đồ}
-
-\subsubsection{Biểu đồ Correlation Heatmap (Hình \ref{fig:correlation_heatmap})}
-
-\textbf{Mục đích:} Phát hiện mối tương quan giữa các biến
-
-\textbf{Cách đọc:}
+\textbf{Phân tích Feature Importance (Hình \ref{fig:feature_importance}):}
 \begin{itemize}
-    \item Giá trị gần 1: Tương quan dương mạnh
-    \item Giá trị gần -1: Tương quan âm mạnh
-    \item Giá trị gần 0: Không có tương quan tuyến tính
-\end{itemize}
-
-\textbf{Ứng dụng:}
-\begin{itemize}
-    \item Nhận diện features có correlation cao với target → features quan trọng
-    \item Phát hiện multicollinearity (features tương quan cao với nhau) → có thể loại bỏ
-\end{itemize}
-
-\subsubsection{Biểu đồ Actual vs Predicted (Hình \ref{fig:predictions_combined})}
-
-\textbf{Mục đích:} Đánh giá trực quan độ chính xác của mô hình
-
-\textbf{Cách đọc:}
-\begin{itemize}
-    \item Điểm nằm trên đường y=x: Dự đoán chính xác
-    \item Điểm phân tán quanh đường y=x: Mô hình tốt
-    \item Điểm xa đường y=x: Sai số lớn
-\end{itemize}
-
-\subsubsection{Biểu đồ Feature Importance (Hình \ref{fig:feature_importance})}
-
-\textbf{Mục đích:} Hiểu features nào ảnh hưởng nhiều nhất đến dự đoán
-
-\textbf{Tính toán (cho tree-based models):}
-\begin{itemize}
-    \item Dựa trên tổng decrease in impurity (Gini/MSE) khi sử dụng feature để split
-    \item Giá trị được chuẩn hóa để tổng = 1
-\end{itemize}
-
-\textbf{Ứng dụng:}
-\begin{itemize}
-    \item Feature selection: Giữ lại features quan trọng
-    \item Model interpretation: Giải thích mô hình cho stakeholders
-    \item Domain insight: Hiểu yếu tố nào ảnh hưởng giá cước taxi
+    \item \textbf{Trip\_Distance\_km} là feature quan trọng nhất (~70-80\% importance) ở tất cả models
+    \item \textbf{Per\_Km\_Rate} và \textbf{Base\_Fare} cũng đóng vai trò quan trọng
+    \item Các biến phân loại (Time\_of\_Day, Weather, Traffic) có ảnh hưởng thấp hơn
+    \item Điều này phù hợp với logic kinh doanh: giá taxi phụ thuộc chủ yếu vào khoảng cách
 \end{itemize}
 
 % =====================================
-% CHƯƠNG 9: HƯỚNG DẪN SỬ DỤNG
+% CHƯƠNG 8: TRỰC QUAN HÓA
 % =====================================
-\section{Hướng dẫn sử dụng}
+\section{Trực quan hóa dữ liệu và kết quả}
 
-\subsection{Yêu cầu hệ thống}
+\subsection{Class DataVisualizer}
+
+Lớp \texttt{DataVisualizer} trong module \texttt{src.visualization} cung cấp các phương thức vẽ biểu đồ chuyên nghiệp. Class này đã được sử dụng xuyên suốt báo cáo để tạo các biểu đồ:
 
 \begin{itemize}
-    \item \textbf{Python:} Phiên bản 3.8 trở lên
-    \item \textbf{RAM:} Tối thiểu 4GB (khuyến nghị 8GB khi chạy optimization)
-    \item \textbf{Hệ điều hành:} Windows, Linux, hoặc macOS
+    \item \textbf{Biểu đồ EDA} (Phần 2.3): Hình \ref{fig:data_overview}, \ref{fig:numeric_distributions}, \ref{fig:categorical_distributions}
+    \item \textbf{Biểu đồ phân tích} (Phần 4.3): Hình \ref{fig:correlation_heatmap}, \ref{fig:target_analysis}, \ref{fig:outliers_boxplot}
+    \item \textbf{Biểu đồ đánh giá mô hình} (Phần 7.2): Hình \ref{fig:metrics_summary}, \ref{fig:predictions_combined}, \ref{fig:feature_importance}
 \end{itemize}
 
-\subsection{Cài đặt môi trường}
-
-\textbf{Bước 1:} Clone hoặc download project về máy
-
-\textbf{Bước 2:} Cài đặt các thư viện cần thiết thông qua pip:
-\begin{verbatim}
-pip install -r requirements.txt
-\end{verbatim}
-
-\textbf{Bước 3:} Kiểm tra cài đặt thành công bằng cách import các thư viện chính
-
-\subsection{Chạy Pipeline}
-
-\subsubsection{Chạy toàn bộ pipeline}
-
-Sử dụng file \texttt{main.py} với các tùy chọn:
+\subsection{Danh sách các phương thức}
 
 \begin{table}[H]
 \centering
-\caption{Các tùy chọn command line}
-\begin{tabular}{|l|p{8cm}|}
+\caption{Chi tiết các phương thức trực quan hóa}
+\label{tab:visualizer_methods}
+
+\renewcommand{\arraystretch}{1.35}
+\small
+
+\begin{tabular}{|>{\raggedright\arraybackslash}p{4.8cm}|p{8.5cm}|}
 \hline
-\textbf{Tùy chọn} & \textbf{Mô tả} \\
+\textbf{Phương thức} & \textbf{Mô tả chi tiết} \\
 \hline
-(không có) & Chạy với hyperparameters mặc định (nhanh, ~2 giây) \\
+
+\texttt{plot\_numeric\_grid()} &
+Vẽ histogram với KDE cho tất cả biến số. Hiển thị mean, median, std. \\
 \hline
-\texttt{--optimize} & Chạy Optuna optimization cho hyperparameters (chậm hơn, kết quả tốt hơn) \\
+
+\texttt{plot\_categorical\_grid()} &
+Vẽ bar chart cho các biến phân loại. Hiển thị tần suất từng category. \\
 \hline
-\texttt{--no-viz} & Bỏ qua việc vẽ biểu đồ \\
+
+\texttt{plot\_correlation\_heatmap()} &
+Vẽ ma trận tương quan dạng heatmap. Nhận diện multicollinearity. \\
 \hline
-\texttt{--skip-download} & Bỏ qua download dữ liệu nếu đã có \\
+
+\texttt{plot\_target\_analysis()} &
+Phân tích target: distribution, Q–Q plot, box plot. Kiểm tra normality. \\
 \hline
+
+\texttt{plot\_outliers\_boxplot()} &
+Vẽ boxplot cho tất cả biến số. Hiển thị Q1, Q3, IQR và outliers. \\
+\hline
+
+\texttt{plot\_data\_overview()} &
+Tổng quan dữ liệu: shape, dtypes, tỷ lệ missing values. \\
+\hline
+
+\texttt{plot\_metrics\_summary()} &
+So sánh metrics (RMSE, MAE, R²) của các mô hình bằng bar chart. \\
+\hline
+
+\texttt{plot\_predictions\_\allowbreak combined()} &
+Scatter plot Actual vs Predicted cho tất cả mô hình với đường y=x. \\
+\hline
+
+\texttt{plot\_feature\_importance()} &
+So sánh feature importance của các tree-based models. \\
+\hline
+
 \end{tabular}
 \end{table}
 
-\subsubsection{Dự đoán với model đã train}
-
-Sử dụng file \texttt{predict.py}:
-
-\begin{table}[H]
-\centering
-\caption{Các tùy chọn predict.py}
-\begin{tabular}{|l|p{8cm}|}
-\hline
-\textbf{Tùy chọn} & \textbf{Mô tả} \\
-\hline
-\texttt{--input <file>} & Đường dẫn đến file CSV cần dự đoán \\
-\hline
-\texttt{--output <file>} & Đường dẫn file output (mặc định: predictions.csv) \\
-\hline
-\texttt{--model <name>} & Chọn model cụ thể (polynomial, random\_forest, extra\_trees, xgboost) \\
-\hline
-\texttt{--interactive} & Chế độ nhập từng giá trị thủ công \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Quy trình sử dụng Module}
-
-\subsubsection{Phase 1: Load và Clean dữ liệu}
-
-Sử dụng \texttt{DataLoader} để đọc và làm sạch dữ liệu ban đầu:
-\begin{enumerate}
-    \item Tạo instance từ file dữ liệu
-    \item Xóa duplicates
-    \item Chuẩn hóa giá trị text
-    \item Áp dụng constraints
-    \item Lấy DataFrame đã xử lý
-\end{enumerate}
-
-\subsubsection{Phase 2: Chia Train/Test}
-
-Sử dụng \texttt{train\_test\_split} từ scikit-learn với tỉ lệ 80/20 và random\_state cố định để đảm bảo reproducibility.
-
-\subsubsection{Phase 3: Transform dữ liệu}
-
-Sử dụng \texttt{DataTransformer}:
-\begin{enumerate}
-    \item Khởi tạo với train data
-    \item Gọi \texttt{fit\_transform()} trên train
-    \item Gọi \texttt{transform\_new\_data()} trên test
-    \item Lưu state để dùng cho inference sau này
-\end{enumerate}
-
-\subsubsection{Phase 4: Training và Evaluation}
-
-Sử dụng \texttt{ModelTrainer}:
-\begin{enumerate}
-    \item Khởi tạo với X\_train, X\_test, y\_train, y\_test
-    \item Gọi \texttt{train\_all()} để train tất cả models
-    \item Gọi \texttt{compare\_models()} để so sánh và chọn best model
-    \item Lưu models và kết quả
-\end{enumerate}
+Tất cả biểu đồ được lưu tự động vào thư mục \texttt{results/eda/} và \texttt{results/model/} với định dạng PNG chất lượng cao.
 
 % =====================================
-% CHƯƠNG 10: KẾT LUẬN
+% CHƯƠNG 9: KẾT LUẬN
 % =====================================
 \section{Kết luận}
 
@@ -1399,7 +1372,7 @@ Dự án đã hoàn thành các mục tiêu đề ra:
         \item Logging
     \end{itemize}
     
-    \item \textbf{So sánh mô hình}: Huấn luyện và đánh giá 4 mô hình, với \textbf{Extra Trees} đạt hiệu suất tốt nhất (R² = 0.953).
+    \item \textbf{So sánh mô hình}: Huấn luyện và đánh giá 3 mô hình, với \textbf{XGBoost} đạt hiệu suất tốt nhất (R² = 0.961, RMSE = 6.67).
     
     \item \textbf{Tối ưu hyperparameters}: Tích hợp Optuna để tự động tìm kiếm hyperparameters tối ưu.
     
@@ -1411,7 +1384,7 @@ Dự án đã hoàn thành các mục tiêu đề ra:
 \begin{itemize}
     \item Chưa thử nghiệm với các mô hình Deep Learning
     \item Chưa có feature engineering phức tạp hơn (interaction features, domain-specific features)
-    \item Cần tối ưu XGBoost để đạt hiệu suất tốt hơn
+    \item XGBoost đạt kết quả tốt nhất nhưng thời gian huấn luyện dài và nhạy cảm hyperparameters → cần thêm monitoring khi mở rộng quy mô
 \end{itemize}
 
 \subsection{Hướng phát triển}
@@ -1480,15 +1453,20 @@ joblib & $\geq$ 1.1.0 & Model serialization \\
 \centering
 \caption{Phân công công việc trong nhóm}
 \label{tab:task_assignment}
-\begin{tabular}{|c|l|p{6cm}|}
+\begin{tabular}{|c|l|c|>{\raggedright\arraybackslash}p{7cm}|}
 \hline
-\textbf{STT} & \textbf{Thành viên} & \textbf{Công việc} \\
+\textbf{STT} & \textbf{Thành viên} & \textbf{MSSV} & \textbf{Công việc} \\
 \hline
-1 & [Họ tên SV 1] & [Mô tả công việc] \\
+1 & Ngô Anh Khoa & 23280065 & 
+-- Xây dựng Model\_trainer, main.py, readme.md \newline
+-- Tham gia viết báo cáo \newline
+-- Tham gia làm slide \\
 \hline
-2 & [Họ tên SV 2] & [Mô tả công việc] \\
-\hline
-3 & [Họ tên SV 3] & [Mô tả công việc] \\
+2 & Mai Quang Dũng & 23280049 & 
+-- Xây dựng Data\_Preprocessor, predict.py \newline
+-- Viết docstring \newline
+-- Tham gia viết báo cáo \newline
+-- Thuyết trình \\
 \hline
 \end{tabular}
 \end{table}
