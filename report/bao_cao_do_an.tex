@@ -18,6 +18,7 @@
 \usepackage{subcaption}
 \usepackage{enumitem}
 \usepackage{tikz}
+\usetikzlibrary{calc}
 \usepackage{multirow}
 \usepackage{tocloft}
 \usepackage{titlesec}
@@ -126,9 +127,11 @@
         {\Large\bfseries MÔN: PYTHON CHO KHOA HỌC DỮ LIỆU}\\[1.6cm]
     \end{center}
 
-    % ===== ĐỀ TÀI =====
-    {\Large\bfseries ĐỀ TÀI: DỰ ĐOÁN GIÁ CƯỚC TAXI}\\[0.3cm]
-    \noindent\hspace*{3.5 cm}{\large\bfseries SỬ DỤNG MÔ HÌNH MACHINE LEARNING}\\[1.5cm]
+        \begin{center}
+            % ===== ĐỀ TÀI =====
+            {\Large\bfseries ĐỀ TÀI: DỰ ĐOÁN GIÁ CƯỚC TAXI}\\[0.3cm]
+            {\large\bfseries SỬ DỤNG MÔ HÌNH MACHINE LEARNING}\\[1.5cm]
+        \end{center}
 
     % ===== KHỐI THÔNG TIN  =====
     \begin{tabular}{@{}l c l@{}}
@@ -146,9 +149,6 @@
     \end{center}
 
 \end{titlepage}
-
-
-
 
 % ===== MỤC LỤC =====
 \tableofcontents
@@ -274,7 +274,7 @@ Trước khi xây dựng mô hình, chúng ta thực hiện Exploratory Data Ana
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/eda/01_data_overview.png}
+\includegraphics[width=0.95\textwidth]{01_data_overview.png}
 \caption{Tổng quan dữ liệu: thông tin về shape, dtypes và missing values}
 \label{fig:data_overview}
 \end{figure}
@@ -290,7 +290,7 @@ Hình \ref{fig:data_overview} cho thấy:
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/eda/02_numeric_distributions.png}
+\includegraphics[width=0.95\textwidth]{02_numeric_distributions.png}
 \caption{Phân phối của các biến số (numeric features) với histogram và KDE}
 \label{fig:numeric_distributions}
 \end{figure}
@@ -305,7 +305,7 @@ Hình \ref{fig:numeric_distributions} hiển thị histogram kết hợp KDE cho
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/eda/03_categorical_distributions.png}
+\includegraphics[width=0.95\textwidth]{03_categorical_distributions.png}
 \caption{Phân phối của các biến phân loại (categorical features)}
 \label{fig:categorical_distributions}
 \end{figure}
@@ -316,7 +316,7 @@ Hình \ref{fig:categorical_distributions} cho thấy tần suất của từng c
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/eda/04_correlation_heatmap.png}
+\includegraphics[width=0.85\textwidth]{04_correlation_heatmap.png}
 \caption{Ma trận tương quan (Correlation Heatmap) giữa các biến số}
 \label{fig:correlation_heatmap}
 \end{figure}
@@ -339,7 +339,7 @@ Hình \ref{fig:categorical_distributions} cho thấy tần suất của từng c
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/eda/05_target_analysis.png}
+\includegraphics[width=0.95\textwidth]{05_target_analysis.png}
 \caption{Phân tích chi tiết biến mục tiêu Trip\_Price}
 \label{fig:target_analysis}
 \end{figure}
@@ -355,7 +355,7 @@ Hình \ref{fig:target_analysis} phân tích biến mục tiêu \texttt{Trip\_Pri
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/eda/06_outliers_boxplot.png}
+\includegraphics[width=0.95\textwidth]{06_outliers_boxplot.png}
 \caption{Boxplot phát hiện outliers cho tất cả biến số}
 \label{fig:outliers_boxplot}
 \end{figure}
@@ -1139,7 +1139,7 @@ Extra Trees & 3.51 & 8.17 & 4.76 & 0.941 \\
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/model/metrics_summary.png}
+\includegraphics[width=0.95\textwidth]{metrics_summary.png}
 \caption{So sánh các metrics (RMSE, MAE, R²) của 3 mô hình}
 \label{fig:metrics_summary}
 \end{figure}
@@ -1150,7 +1150,7 @@ Hình \ref{fig:metrics_summary} trực quan hóa kết quả từ Bảng \ref{ta
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/model/predictions_combined.png}
+\includegraphics[width=0.95\textwidth]{predictions_combined.png}
 \caption{Scatter plot Actual vs Predicted cho 3 mô hình}
 \label{fig:predictions_combined}
 \end{figure}
@@ -1267,7 +1267,7 @@ XGBoost &
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{../results/model/feature_importance_comparison.png}
+\includegraphics[width=0.95\textwidth]{feature_importance_comparison.png}
 \caption{So sánh Feature Importance của các tree-based models}
 \label{fig:feature_importance}
 \end{figure}
