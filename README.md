@@ -148,11 +148,11 @@ Pipeline sẽ tự động:
 ### Cách 2: Dự đoán với model đã train
 
 ```bash
-# Dự đoán từ file CSV
-python predict.py --input data/new_data.csv --output predictions.csv
+# Dự đoán từ file CSV (sử dụng file mẫu `data/sample_input.csv`)
+python predict.py --input data/sample_input.csv --output results/predictions.csv
 
-# Dự đoán với model cụ thể
-python predict.py --input data/new_data.csv --model xgboost
+# Dự đoán với model cụ thể (tên model: random_forest | extra_trees | xgboost)
+python predict.py --input data/sample_input.csv --model xgboost --output results/predictions.csv
 
 # Dự đoán interactive (nhập từng giá trị)
 python predict.py --interactive
@@ -297,13 +297,16 @@ trainer.compare_feature_importance(top_n=10, save=True)
 | -------------- | ---------- | --------- | -------- | --------- |
 | Random Forest  | 4.89       | 7.78      | 4.94     | 0.946     |
 | Extra Trees    | 1.19       | 7.71      | 4.60     | 0.947     |
-| **XGBoost** ⭐ | **6.36**   | **6.70**  | **4.31** | **0.960** |
+| **XGBoost** ⭐ | **3.67**   | **6.67**  | **3.98** | **0.961** |
 
 ### Mô hình tốt nhất: **XGBoost**
 
 - Test R²: **0.960** (giải thích 96.0% phương sai)
 - Test RMSE: **6.70**
 - Test MAE: **4.31**
+- Test R²: **0.961** (giải thích 96.1% phương sai)
+- Test RMSE: **6.67**
+- Test MAE: **3.98**
 
 ### Biểu đồ EDA (6 files trong results/eda/):
 
@@ -366,3 +369,7 @@ Dự án được tạo cho mục đích học tập - Môn Python cho Khoa họ
 ---
 
 **Ngày hoàn thành:** 08/12/2025
+
+---
+
+**Ghi chú:** Các số liệu trên được cập nhật từ kết quả chạy tối ưu hóa (`--optimize`) và lưu trong `results/pipeline_state.json`.
