@@ -356,7 +356,7 @@ Emoji có thể hiển thị sai trên PowerShell, nhưng file log (`training.lo
 
 ## 👥 Thành viên nhóm
 
-Mai Quang Dũng - 23280049
+Mai Quang Dũng - 23280049  
 Ngô Anh Khoa - 23280065
 
 ## 📄 License
