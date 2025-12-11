@@ -93,7 +93,9 @@ Do_An_Python/
 ├── predict.py                        # Script dự đoán với model đã train
 ├── requirements.txt                  # Dependencies
 ├── README.md                         # File này
-└── yeu_cau_do_an.txt                 # Yêu cầu đồ án
+├── yeu_cau_do_an.txt                 # Yêu cầu đồ án
+├── training.log                      # Log quá trình training
+└── .gitignore                        # Cấu hình Git ignore
 ```
 
 ## 🔧 Cài đặt
