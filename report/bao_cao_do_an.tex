@@ -611,6 +611,25 @@ Constant & Kiểm soát hoàn toàn & Cần hiểu domain knowledge & Biết gi�
 \end{tabular}
 \end{table}
 
+\subsubsection{Các phương pháp xử lý Outliers}
+
+\begin{table}[H]
+\centering
+\caption{So sánh các phương pháp xử lý Outliers}
+\label{tab:outlier_methods}
+\begin{tabular}{|l|p{3.5cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Phương pháp} & \textbf{Mô tả} & \textbf{Ưu điểm} & \textbf{Nhược điểm} \\
+\hline
+IQR (Interquartile Range) & Outlier nếu $x < Q_1 - 1.5 \times IQR$ hoặc $x > Q_3 + 1.5 \times IQR$ & Đơn giản, robust với phân phối không chuẩn & Có thể loại bỏ quá nhiều điểm với dữ liệu skewed \\
+\hline
+Z-Score & Outlier nếu $|z| = \left|\frac{x - \mu}{\sigma}\right| > 3$ & Dễ hiểu, dựa trên thống kê chuẩn & Giả định phân phối chuẩn, nhạy với outliers cực đoan \\
+\hline
+Isolation Forest & Cô lập điểm bất thường bằng random splits, điểm dễ cô lập = outlier & Hiệu quả với dữ liệu đa chiều, không cần giả định phân phối & Cần tune contamination parameter, tốn tài nguyên hơn \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsubsection{Các phương pháp Encoding}
 
 \begin{table}[H]
@@ -1322,9 +1341,10 @@ Vẽ bar chart cho các biến phân loại. Hiển thị tần suất từng ca
 Vẽ ma trận tương quan dạng heatmap. Nhận diện multicollinearity. \\
 \hline
 
-\texttt{plot\_target\_analysis()} &
-Phân tích target: distribution, Q–Q plot, box plot. Kiểm tra normality. \\
+\texttt{Correlations\_plot()} &
+Thể hiện mức độ tương quan giữa biến Target và các biến quan trọng nhất.\\
 \hline
+
 
 \texttt{plot\_outliers\_boxplot()} &
 Vẽ boxplot cho tất cả biến số. Hiển thị Q1, Q3, IQR và outliers. \\

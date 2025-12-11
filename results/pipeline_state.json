@@ -1,17 +1,17 @@
 {
-    "generated_at": "2025-12-08T10:22:23.535298+07:00",
+    "generated_at": "2025-12-11T16:21:37.742547+07:00",
     "transformer": {
-        "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\data_transformer.joblib",
+        "path": "D:\\Nhập môn Python\\Đồ án cuối kì ver3\\Do_An_Python\\models\\data_transformer.joblib",
         "target_column": "Trip_Price",
         "n_features": 18
     },
     "models": {
         "random_forest": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\random_forest.joblib",
+            "path": "D:\\Nhập môn Python\\Đồ án cuối kì ver3\\Do_An_Python\\models\\random_forest.joblib",
             "metrics": {
-                "train_rmse": 4.474932447233198,
-                "test_rmse": 7.806602416771463,
-                "test_mae": 5.024481179365696,
+                "train_rmse": 4.474932447233199,
+                "test_rmse": 7.806602416771464,
+                "test_mae": 5.024481179365697,
                 "test_r2": 0.9459833106077822
             },
             "hyperparams": {
@@ -22,12 +22,12 @@
             }
         },
         "extra_trees": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\extra_trees.joblib",
+            "path": "D:\\Nhập môn Python\\Đồ án cuối kì ver3\\Do_An_Python\\models\\extra_trees.joblib",
             "metrics": {
-                "train_rmse": 3.512293660474934,
-                "test_rmse": 8.167517376661229,
-                "test_mae": 4.758111895595099,
-                "test_r2": 0.9408732545920819
+                "train_rmse": 3.5122936604749344,
+                "test_rmse": 8.16751737666122,
+                "test_mae": 4.758111895595097,
+                "test_r2": 0.940873254592082
             },
             "hyperparams": {
                 "n_estimators": 126,
@@ -37,12 +37,12 @@
             }
         },
         "xgboost": {
-            "path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\xgboost.joblib",
+            "path": "D:\\Nhập môn Python\\Đồ án cuối kì ver3\\Do_An_Python\\models\\xgboost.joblib",
             "metrics": {
-                "train_rmse": 3.6701818929767285,
-                "test_rmse": 6.668622679390362,
-                "test_mae": 3.975838211777551,
-                "test_r2": 0.9605836750042518
+                "train_rmse": 3.646753416271736,
+                "test_rmse": 6.748078807569523,
+                "test_mae": 3.961360996467521,
+                "test_r2": 0.9596387942665968
             },
             "hyperparams": {
                 "max_depth": 5,
@@ -60,10 +60,10 @@
         }
     },
     "best_model": "xgboost",
-    "best_model_path": "E:\\Hoc Tap\\Thuc hanh Python\\Do_An_Python\\models\\xgboost.joblib",
+    "best_model_path": "D:\\Nhập môn Python\\Đồ án cuối kì ver3\\Do_An_Python\\models\\xgboost.joblib",
     "best_metrics": {
-        "test_rmse": 6.668622679390362,
-        "test_mae": 3.975838211777551,
-        "test_r2": 0.9605836750042518
+        "test_rmse": 6.748078807569523,
+        "test_mae": 3.961360996467521,
+        "test_r2": 0.9596387942665968
     }
 }
