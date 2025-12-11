@@ -107,17 +107,39 @@ Do_An_Python/
 cd Do_An_Python
 ```
 
-### Bước 2: Cài đặt dependencies
+### Bước 2: Tạo môi trường ảo (khuyến nghị)
+
+**Windows (PowerShell):**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**Windows (Command Prompt):**
+```cmd
+python -m venv venv
+venv\Scripts\activate.bat
+```
+
+**Linux/macOS:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### Bước 3: Cài đặt dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Bước 3: Kiểm tra cài đặt
+### Bước 4: Kiểm tra cài đặt
 
 ```bash
 python -c "import pandas, sklearn, xgboost, optuna; print('Cai dat thanh cong!')"
 ```
+
+> **Lưu ý:** Mỗi lần mở terminal mới, cần kích hoạt lại môi trường ảo bằng lệnh activate tương ứng.
 
 ## 🚀 Hướng dẫn sử dụng
 
