@@ -36,6 +36,7 @@
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | ======================================================================
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | 🔧 BẮT ĐẦU FIT_TRANSFORM PIPELINE
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | ======================================================================
+2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 1: Loại bỏ outliers
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 2: Xử lý missing values
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | 🔸 Bước 3: Mã hóa biến phân loại (onehot)
 2025-12-11 17:19:07 | INFO     | src.preprocessing.data_transformer | 🧩 ENCODING FEATURES | Tổng cột phân loại: 4 | Rule riêng: 0
