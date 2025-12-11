@@ -57,7 +57,8 @@ Do_An_Python/
 │
 ├── data/                             # Dữ liệu
 │   ├── taxi_price.csv                # Dữ liệu gốc
-│   └── taxi_price_processed.csv      # Dữ liệu đã xử lý
+│   ├── taxi_price_processed.csv      # Dữ liệu đã xử lý
+│   └── sample_input.csv              # Dữ liệu mẫu cho predict
 │
 ├── models/                           # Mô hình đã train
 │   ├── random_forest.joblib
@@ -73,11 +74,12 @@ Do_An_Python/
 │   │   ├── 04_correlation_heatmap.png
 │   │   ├── 05_target_analysis.png
 │   │   └── 06_outliers_boxplot.png
-│   ├── model/                        # Biểu đồ model (3 files)
+│   ├── model/                        # Biểu đồ model và kết quả
 │   │   ├── metrics_summary.png
 │   │   ├── predictions_combined.png
-│   │   └── feature_importance_comparison.png
-│   ├── model_results.json
+│   │   ├── feature_importance_comparison.png
+│   │   └── model_results.json        # Kết quả đánh giá models
+│   ├── predictions.csv               # Kết quả dự đoán
 │   └── pipeline_state.json
 │
 ├── notebooks/                        # Jupyter notebooks
@@ -85,7 +87,7 @@ Do_An_Python/
 │
 ├── report/                           # Báo cáo LaTeX
 │   └── bao_cao_do_an.tex
-│
+│   └── Báo cáo đồ án.pdf
 ├── config.py                         # File cấu hình
 ├── main.py                           # Script chính để chạy pipeline
 ├── predict.py                        # Script dự đoán với model đã train
@@ -101,9 +103,10 @@ Do_An_Python/
 - Python 3.8+
 - pip
 
-### Bước 1: Clone hoặc download project
+### Bước 1: Clone từ github hoặc download project
 
 ```bash
+git clone https://github.com/drpie143/Do_An_Python.git
 cd Do_An_Python
 ```
 
