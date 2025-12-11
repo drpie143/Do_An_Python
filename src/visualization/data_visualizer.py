@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+# Set matplotlib backend to non-interactive to avoid tkinter issues
+import matplotlib
+matplotlib.use('Agg')
+
 import logging
 import re
 from pathlib import Path

@@ -14,6 +14,10 @@ Cách chạy:
     python main.py --no-viz      # Không vẽ biểu đồ
 """
 
+# Set matplotlib backend to non-interactive to avoid tkinter issues
+import matplotlib
+matplotlib.use('Agg')
+
 import argparse
 import importlib
 import json
